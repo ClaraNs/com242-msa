@@ -14,22 +14,19 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
 
-import org.springframework.web.bind.annotation.PathVariable;
 
 import br.com.criandoapi.projeto.DAO.IArtigo;
-import br.com.criandoapi.projeto.config.DatabaseConfig;
 import br.com.criandoapi.projeto.model.Aluno;
 import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Professor;
+import br.com.criandoapi.projeto.model.StatusArtigo;
+import br.com.criandoapi.projeto.service.AlunoService;
+import br.com.criandoapi.projeto.service.ProfessorService;
 
 
 import java.util.List;
@@ -39,68 +36,23 @@ import java.util.List;
 @RequestMapping("/artigo")
 public class ArtigoController {
 
-    private final DatabaseConfig databaseConfig;
     private final IArtigo dao;
+    private final ProfessorService professorService;
+    private final AlunoService alunoService;
 
     @Autowired
     private ServletContext servletContext;
 
     @Autowired
-    public ArtigoController(DatabaseConfig databaseConfig, IArtigo dao) {
-        this.databaseConfig = databaseConfig;
+    public ArtigoController( IArtigo dao, ProfessorService professorService, AlunoService alunoService) {
         this.dao = dao;
+        this.professorService = professorService;
+        this.alunoService = alunoService;
     }
 
     @GetMapping
     public List<Artigo> listaArtigos() {
         return (List<Artigo>) dao.findAll();
-    }
-
-    @GetMapping("/aluno/{matricula}")
-    public Aluno findAlunoByMatricula(@PathVariable String matricula) {
-        try (Connection connection = databaseConfig.getConnection();
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM aluno WHERE matricula = ?")) {
-            statement.setString(1, matricula);
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("matricula"));
-                aluno.setNome(resultSet.getString("nome"));
-                aluno.setEmail(resultSet.getString("email"));
-                // Preencha os outros atributos do aluno, se houver
-
-                return aluno;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Lidar com exceções, se necessário
-        }
-
-        return null; // Retorna null se o aluno não for encontrado
-    }
-
-    @GetMapping("/professor/nome")
-    public Professor findProfessorByNome(@RequestParam("nome") String nomeProfessor) {
-        try (Connection connection = databaseConfig.getConnection();
-                PreparedStatement statement = connection
-                        .prepareStatement("SELECT * FROM professor WHERE nome LIKE ?")) {
-            statement.setString(1, "%" + nomeProfessor + "%");
-            ResultSet resultSet = statement.executeQuery();
-            if (resultSet.next()) {
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matricula"));
-                professor.setNome(resultSet.getString("nome"));
-                professor.setEmail(resultSet.getString("email"));
-                // Preencha os outros atributos do professor, se houver
-
-                return professor;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Lidar com exceções, se necessário
-        }
-
-        return null; // Retorna null se o professor não for encontrado
     }
 
     @PostMapping("/upload")
@@ -130,33 +82,22 @@ public class ArtigoController {
         // Construa a URL de download do arquivo
         String downloadUrl = "/download/" + fileName;
 
-        /*
-         * int STATUS_PENDENTE = 0;
-         * 
-         * // Obtém a lista de valores possíveis de status do banco de dados
-         * List<StatusArtigo> listaStatus = statusArtigoDao.obterListaStatus();
-         * 
-         * // Encontra o status com ID igual a 0 (Pendente)
-         * StatusArtigo statusPendente = listaStatus.stream()
-         * .filter(status -> status.getId() == STATUS_PENDENTE)
-         * .findFirst()
-         * .orElse(null);
-         */
-
         // Encontrar o objeto Aluno com base na matrícula
-        Aluno aluno = findAlunoByMatricula(enviadopor);
+        Aluno aluno = alunoService.findAlunoByMatricula(enviadopor);
 
-        // Encontre o objeto Professor com base na matrícula
-        Professor professor = findProfessorByNome(nomeOrientador);
+        // Encontre o objeto Professor com base no nome
+        Professor professor = professorService.findProfessorByNome(nomeOrientador);
 
         // Crie um novo objeto Artigo com os campos preenchidos
         Artigo artigo = new Artigo();
+        StatusArtigo status = new StatusArtigo();
+        status.setId(0);
         artigo.setTitulo(titulo);
         artigo.setUrl(downloadUrl);
         artigo.setResumo(resumo);
         artigo.setDataEnvio(LocalDateTime.now());
         artigo.setAlteracao(LocalDateTime.now());
-        // artigo.setStatus(statusPendente);
+        artigo.setStatus(status);
         artigo.setEnviadoPor(aluno);
         artigo.setOrientador(professor);
         

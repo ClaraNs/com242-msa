@@ -29,7 +29,7 @@ public class Banca {
     private LocalDateTime dataRegistro;
 
     @Column(name = "dataatualizacao", nullable = false)
-    private Timestamp dataAtualizacao;
+    private LocalDateTime dataAtualizacao;
 
     @ManyToOne
     @JoinColumn(name = "professoravaliador", referencedColumnName = "matricula", foreignKey = @ForeignKey(name = "fk_banca_professor"))
@@ -75,13 +75,13 @@ public class Banca {
         this.dataRegistro = dataRegistro;
     }
 
-    public Timestamp getDataAtualizacao() {
-    return dataAtualizacao;
-}
+    public LocalDateTime getDataAtualizacao() {
+        return dataAtualizacao;
+    }
 
-public void setDataAtualizacao(Timestamp dataAtualizacao) {
-    this.dataAtualizacao = dataAtualizacao;
-}
+    public void setDataAtualizacao(LocalDateTime dataAtualizacao) {
+        this.dataAtualizacao = dataAtualizacao;
+    }
 
     public Professor getProfessorAvaliador() {
         return professorAvaliador;
@@ -123,4 +123,3 @@ public void setDataAtualizacao(Timestamp dataAtualizacao) {
         this.nota = nota;
     }
 }
-
