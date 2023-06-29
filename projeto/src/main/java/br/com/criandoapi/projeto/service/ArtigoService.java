@@ -40,6 +40,7 @@ public class ArtigoService {
                 Artigo artigo = new Artigo();
                 artigo.setIdArtigo(resultSet.getInt("idArtigo"));
                 artigo.setTitulo(resultSet.getString("titulo"));
+                artigo.setArquivo(resultSet.getBytes("arquivo"));
                 artigo.setUrl(resultSet.getString("url"));
                 artigo.setResumo(resultSet.getString("resumo"));
                 artigo.setDataEnvio(resultSet.getTimestamp("dataEnvio").toLocalDateTime());
@@ -87,6 +88,7 @@ public class ArtigoService {
                 Artigo artigo = new Artigo();
                 artigo.setIdArtigo(resultSet.getInt("idArtigo"));
                 artigo.setTitulo(resultSet.getString("titulo"));
+                artigo.setArquivo(resultSet.getBytes("arquivo"));
                 artigo.setUrl(resultSet.getString("url"));
                 artigo.setResumo(resultSet.getString("resumo"));
                 artigo.setDataEnvio(resultSet.getTimestamp("dataEnvio").toLocalDateTime());
@@ -134,6 +136,7 @@ public class ArtigoService {
                 Artigo artigo = new Artigo();
                 artigo.setIdArtigo(resultSet.getInt("idArtigo"));
                 artigo.setTitulo(resultSet.getString("titulo"));
+                artigo.setArquivo(resultSet.getBytes("arquivo"));
                 artigo.setUrl(resultSet.getString("url"));
                 artigo.setResumo(resultSet.getString("resumo"));
                 artigo.setDataEnvio(resultSet.getTimestamp("dataEnvio").toLocalDateTime());

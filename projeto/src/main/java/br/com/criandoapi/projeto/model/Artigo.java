@@ -7,8 +7,12 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.Type;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -23,7 +27,12 @@ public class Artigo {
     @Column(name = "titulo", length = 80, nullable = false)
     private String titulo;
 
-    @Column(name = "url", columnDefinition = "TEXT", nullable = false)
+    @Lob
+    @Type(type="org.hibernate.type.BinaryType")
+    @Column(name = "arquivo", nullable = false)
+    private byte[] arquivo;
+
+    @Column(name = "url", columnDefinition = "TEXT")
     private String url;
 
     @Column(name = "resumo", columnDefinition = "TEXT", nullable = false)
@@ -69,6 +78,14 @@ public class Artigo {
 
     public void setTitulo(String titulo) {
         this.titulo = titulo;
+    }
+
+    public byte[] getArquivo() {
+        return arquivo;
+    }
+
+    public void setArquivo(byte[] arquivo) {
+        this.arquivo = arquivo;
     }
 
     public String getUrl() {
