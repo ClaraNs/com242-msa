@@ -32,7 +32,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/artigo")
+@RequestMapping
 public class ArtigoController {
 
     private final IArtigo dao;
@@ -51,22 +51,22 @@ public class ArtigoController {
         this.artigoService = artigoService;
     }
 
-    @GetMapping
+    @GetMapping("/artigo")
     public List<Artigo> listaArtigos() {
         return (List<Artigo>) dao.findAll();
     }
 
-    @GetMapping("/pormatricula/{matricula}")
+    @GetMapping("/artigopormatricula/{matricula}")
     public List<Artigo> listaArtigosAluno(@PathVariable String matricula) {
         return artigoService.getArtigosPorMatriculaAluno(matricula);
     }
 
-    @GetMapping("/pororientador/{matricula}")
+    @GetMapping("/artigopororientador/{matricula}")
     public List<Artigo> listaArtigosOrientador(@PathVariable String matricula) {
         return artigoService.getArtigosPorMatriculaOrientador(matricula);
     }
 
-    @PostMapping("/upload")
+    @PostMapping("/artigoupload")
     public Artigo uploadFile(@RequestParam("pdfFile") Part filePart,
             @RequestParam("titulo") String titulo,
             @RequestParam("resumo") String resumo,

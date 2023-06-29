@@ -31,7 +31,7 @@ import br.com.criandoapi.projeto.service.ProfessorService;
 
 @RestController
 @CrossOrigin("*")
-@RequestMapping("/banca")
+@RequestMapping
 public class BancaController {
 
     private IBanca dao;
@@ -47,17 +47,17 @@ public class BancaController {
         this.bancaService = bancaService;
     }
 
-    @GetMapping
+    @GetMapping("/banca")
     public List<Banca> listaBancas() {
         return (List<Banca>) dao.findAll();
     }
 
-    @GetMapping("/porprofessor/{matricula}")
+    @GetMapping("/bancaporprofessor/{matricula}")
     public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
         return bancaService.getBancasPorProfessor(matricula);
     }
 
-    @PostMapping("/cadastrar")
+    @PostMapping("/bancacadastro")
     public String cadastrarBancas(@RequestParam("professor1") String nomeProfessor1,
             @RequestParam("professor2") String nomeProfessor2,
             @RequestParam("idartigo") Integer idartigo) {
