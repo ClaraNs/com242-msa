@@ -3,11 +3,11 @@ package br.com.criandoapi.projeto.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,15 +19,14 @@ import java.time.LocalDateTime;
 import javax.servlet.ServletContext;
 import javax.servlet.http.Part;
 
-
 import br.com.criandoapi.projeto.DAO.IArtigo;
 import br.com.criandoapi.projeto.model.Aluno;
 import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Professor;
 import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.service.AlunoService;
+import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.ProfessorService;
-
 
 import java.util.List;
 
@@ -39,20 +38,32 @@ public class ArtigoController {
     private final IArtigo dao;
     private final ProfessorService professorService;
     private final AlunoService alunoService;
+    private final ArtigoService artigoService;
 
     @Autowired
     private ServletContext servletContext;
 
     @Autowired
-    public ArtigoController( IArtigo dao, ProfessorService professorService, AlunoService alunoService) {
+    public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService, ArtigoService artigoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
+        this.artigoService = artigoService;
     }
 
     @GetMapping
     public List<Artigo> listaArtigos() {
         return (List<Artigo>) dao.findAll();
+    }
+
+    @GetMapping("/pormatricula/{matricula}")
+    public List<Artigo> listaArtigosAluno(@PathVariable String matricula) {
+        return artigoService.getArtigosPorMatriculaAluno(matricula);
+    }
+
+    @GetMapping("/pororientador/{matricula}")
+    public List<Artigo> listaArtigosOrientador(@PathVariable String matricula) {
+        return artigoService.getArtigosPorMatriculaOrientador(matricula);
     }
 
     @PostMapping("/upload")
@@ -100,7 +111,6 @@ public class ArtigoController {
         artigo.setStatus(status);
         artigo.setEnviadoPor(aluno);
         artigo.setOrientador(professor);
-        
 
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         Artigo novoArtigo = dao.save(artigo);

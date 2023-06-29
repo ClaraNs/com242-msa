@@ -12,6 +12,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -22,9 +23,10 @@ import br.com.criandoapi.projeto.DAO.IBanca;
 import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Professor;
-import br.com.criandoapi.projeto.model.StatusArtigo;
+//import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.model.StatusBanca;
 import br.com.criandoapi.projeto.service.ArtigoService;
+import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 
 @RestController
@@ -35,17 +37,24 @@ public class BancaController {
     private IBanca dao;
     private final ProfessorService professorService;
     private final ArtigoService artigoService;
+    private final BancaService bancaService;
 
     @Autowired
-    public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService) {
+    public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService, BancaService bancaService) {
         this.dao = dao;
         this.professorService = professorService;
         this.artigoService = artigoService;
+        this.bancaService = bancaService;
     }
 
     @GetMapping
     public List<Banca> listaBancas() {
         return (List<Banca>) dao.findAll();
+    }
+
+    @GetMapping("/porprofessor/{matricula}")
+    public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
+        return bancaService.getBancasPorProfessor(matricula);
     }
 
     @PostMapping("/cadastrar")
@@ -74,7 +83,6 @@ public class BancaController {
 
             Banca banca2 = new Banca();
             banca2.setProfessorAvaliador(professor2);
-            banca2.setProfessorAvaliador(professor1);
             banca2.setDataRegistro(dia);
             banca2.setDataAtualizacao(dia);
             banca2.setArtigoAvaliado(artigo);
