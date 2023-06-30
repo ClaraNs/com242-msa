@@ -117,10 +117,10 @@ public class ArtigoController {
             //Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
             status = statusArtigoService.findStatusArtigoById(idStatus);
-            artigo.setStatus(status);
 
             //String consideracoes = (String) requestBody.get("consideracoes");
             artigo.setConsideracoes(consideracoes);
+            artigo.setAlteracao(LocalDateTime.now());
 
             // Salve as alterações no artigo
             dao.save(artigo);
