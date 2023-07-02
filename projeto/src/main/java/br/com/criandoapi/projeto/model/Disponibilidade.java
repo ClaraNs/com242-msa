@@ -1,6 +1,5 @@
 package br.com.criandoapi.projeto.model;
 
-import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDateTime;
 
@@ -28,11 +27,11 @@ public class Disponibilidade {
     private Professor professor;
 
     @ManyToOne
-    @JoinColumn(name = "idbanca", referencedColumnName = "idbanca", foreignKey = @ForeignKey(name = "fk_disponibilidade_banca"), nullable = false)
+    @JoinColumn(name = "idbanca", referencedColumnName = "idBanca", foreignKey = @ForeignKey(name = "fk_disponibilidade_banca"), nullable = false)
     private Banca banca;
 
     @Column(name = "data", nullable = false)
-    private Date data;
+    private LocalDateTime data;
 
     @Column(name = "horainicio", nullable = false)
     private Time horaInicio;
@@ -66,11 +65,11 @@ public class Disponibilidade {
         this.banca = banca;
     }
 
-    public Date getData() {
+    public LocalDateTime getData() {
         return data;
     }
 
-    public void setData(Date data) {
+    public void setData(LocalDateTime data) {
         this.data = data;
     }
 

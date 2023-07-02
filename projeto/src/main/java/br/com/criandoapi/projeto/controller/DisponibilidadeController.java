@@ -3,11 +3,14 @@ package br.com.criandoapi.projeto.controller;
 import java.sql.Date;
 import java.sql.Time;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,10 +52,10 @@ public class DisponibilidadeController {
 
     @PostMapping("disponibilidadebanca/{idBanca}")
     public ResponseEntity<String> cadastraDisponibilidade(@PathVariable Integer idBanca,
-            @RequestParam("idProfessor") String idProfessor,
-            @RequestParam("data") Date data,
-            @RequestParam("horaInicio") Time horaInicio,
-            @RequestParam("horaFim") Time horaFim){
+            @ModelAttribute("idProfessor") String idProfessor,
+            @ModelAttribute("data") String dataString,
+            @ModelAttribute("horaInicio") String horaInicioString,
+            @ModelAttribute("horaFim") String horaFimString) {
         // Obtenha o objeto Banca do banco de dados com base no ID
         Banca banca = bancaService.getBancaById(idBanca);
 
@@ -62,9 +65,14 @@ public class DisponibilidadeController {
 
             Professor professor = professorService.FindProfessorById(idProfessor);
             disponibilidade.setProfessor(professor);
-            disponibilidade.setData(data);
-            disponibilidade.setHoraInicio(horaInicio);
-            disponibilidade.setHoraFim(horaFim);
+
+            LocalDate data_convertida = LocalDate.parse(dataString);
+            LocalTime horaInicio = LocalTime.parse(horaInicioString);
+            LocalTime horaFim = LocalTime.parse(horaFimString);
+    
+            disponibilidade.setData(data_convertida.atStartOfDay());
+            disponibilidade.setHoraInicio(Time.valueOf(horaInicio));
+            disponibilidade.setHoraFim(Time.valueOf(horaFim));
 
             // Salve
             dao.save(disponibilidade);
@@ -80,11 +88,11 @@ public class DisponibilidadeController {
     @PostMapping("disponibilidadebancaorientador/{idArtigo}")
     public ResponseEntity<String> cadastraDisponibilidadeOrientador(@PathVariable Integer idArtigo,
             @RequestParam("idProfessor") String idProfessor,
-            @RequestParam("data") Date data,
-            @RequestParam("horaInicio") Time horaInicio,
-            @RequestParam("horaFim") Time horaFim){
-        
-        // O orientador fica disponível em relação ao menor id das bancas relacionadas aquele artigo
+            @RequestParam("data") String dataString,
+            @RequestParam("horaInicio") String horaInicioString,
+            @RequestParam("horaFim") String horaFimString) {
+
+        // O orientador fica disponível em relação ao menor ID das bancas relacionadas a aquele artigo
         Banca banca = bancaService.getBancaById(bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
 
         if (banca != null) {
@@ -93,9 +101,13 @@ public class DisponibilidadeController {
 
             Professor professor = professorService.FindProfessorById(idProfessor);
             disponibilidade.setProfessor(professor);
-            disponibilidade.setData(data);
-            disponibilidade.setHoraInicio(horaInicio);
-            disponibilidade.setHoraFim(horaFim);
+            LocalDate data_convertida = LocalDate.parse(dataString);
+            LocalTime horaInicio = LocalTime.parse(horaInicioString);
+            LocalTime horaFim = LocalTime.parse(horaFimString);
+
+            disponibilidade.setData(data_convertida.atStartOfDay());
+            disponibilidade.setHoraInicio(Time.valueOf(horaInicio));
+            disponibilidade.setHoraFim(Time.valueOf(horaFim));
 
             // Salve
             dao.save(disponibilidade);

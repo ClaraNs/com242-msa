@@ -3,7 +3,6 @@ package br.com.criandoapi.projeto.controller;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.ArrayList;
 import java.util.List;
 import java.sql.Date;  // Importe a classe java.sql.Date
 import java.time.LocalDate;
@@ -144,19 +143,20 @@ public class BancaController {
 
         // Como fica o orientador?? Está disponível em relação a qual banca? A banca de menor número
         disponibilidadesProfessor3 = disponibilidadeService.getDisponibilidadesPorMatricula(orientador.getMatricula(), bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
-
+       
         // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
-        Date dataAvaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
+         Disponibilidade avaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
+        //LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
 
-        if( dataAvaliacao != null){
+        if( avaliacao != null){
+            
             for (Integer bancaId : bancas) {
                 Banca banca = bancaService.getBancaById(bancaId);
-                LocalDateTime dataHora = LocalDateTime.ofInstant(dataAvaliacao.toInstant(), ZoneId.systemDefault());
-                banca.setDataAvaliacao(dataHora);
-                banca.setDataHora(dataHora);
+                banca.setDataAvaliacao(avaliacao.getData());
+                banca.setDataHora(avaliacao.getData());
             }
 
-            return "Horário de avaliação cadastrado com sucesso";
+            return "Horário de avaliação cadastrado com sucesso" + "Dia" + avaliacao.getData();
         } else {
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
         }
