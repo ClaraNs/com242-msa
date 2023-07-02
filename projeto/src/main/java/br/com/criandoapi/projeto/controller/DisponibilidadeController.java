@@ -71,8 +71,8 @@ public class DisponibilidadeController {
             LocalTime horaFim = LocalTime.parse(horaFimString);
     
             disponibilidade.setData(data_convertida.atStartOfDay());
-            disponibilidade.setHoraInicio(Time.valueOf(horaInicio));
-            disponibilidade.setHoraFim(Time.valueOf(horaFim));
+            disponibilidade.setHoraInicio(horaInicio);
+            disponibilidade.setHoraFim(horaFim);
 
             // Salve
             dao.save(disponibilidade);
@@ -106,8 +106,8 @@ public class DisponibilidadeController {
             LocalTime horaFim = LocalTime.parse(horaFimString);
 
             disponibilidade.setData(data_convertida.atStartOfDay());
-            disponibilidade.setHoraInicio(Time.valueOf(horaInicio));
-            disponibilidade.setHoraFim(Time.valueOf(horaFim));
+            disponibilidade.setHoraInicio(horaInicio);
+            disponibilidade.setHoraFim(horaFim);
 
             // Salve
             dao.save(disponibilidade);

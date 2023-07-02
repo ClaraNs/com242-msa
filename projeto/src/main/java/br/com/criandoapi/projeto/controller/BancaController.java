@@ -143,20 +143,24 @@ public class BancaController {
 
         // Como fica o orientador?? Está disponível em relação a qual banca? A banca de menor número
         disponibilidadesProfessor3 = disponibilidadeService.getDisponibilidadesPorMatricula(orientador.getMatricula(), bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
-       
-        // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
-         Disponibilidade avaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
-        //LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
 
-        if( avaliacao != null){
+        // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
+        LocalDate dataAvaliacao = disponibilidadeService.encontrarDataEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
+        LocalTime horaAvaliacao = disponibilidadeService.encontrarHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3, dataAvaliacao);
+
+        if( dataAvaliacao != null && horaAvaliacao != null){
             
             for (Integer bancaId : bancas) {
-                Banca banca = bancaService.getBancaById(bancaId);
-                banca.setDataAvaliacao(avaliacao.getData());
-                banca.setDataHora(avaliacao.getData());
+                Banca banca = new Banca();
+                banca = bancaService.getBancaById(bancaId);
+                banca.setDataAvaliacao(dataAvaliacao.atTime(horaAvaliacao));
+                banca.setDataHora(dataAvaliacao.atTime(horaAvaliacao));
+                System.out.println("ID DA BANCA:  " + bancaId);
+
+                dao.save(banca);
             }
 
-            return "Horário de avaliação cadastrado com sucesso" + "Dia" + avaliacao.getData();
+            return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao + " " + horaAvaliacao;
         } else {
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
         }

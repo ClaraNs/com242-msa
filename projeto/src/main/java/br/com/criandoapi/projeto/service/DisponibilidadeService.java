@@ -4,7 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -57,9 +60,20 @@ public class DisponibilidadeService {
                 Banca banca = new Banca();
                 banca = bancaService.getBancaById(idBanca);
                 disponibilidade.setBanca(banca);
-                disponibilidade.setData(resultSet.getObject("data", LocalDateTime.class));
-                disponibilidade.setHoraInicio(resultSet.getTime("horaInicio"));
-                disponibilidade.setHoraFim(resultSet.getTime("horaFim"));
+
+                // Converter os valores de Date para LocalTime
+                Date dateInicio = resultSet.getTimestamp("horaInicio");
+                Date dateFim = resultSet.getTimestamp("horaFim");
+                LocalTime horaInicio = dateInicio.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+                LocalTime horaFim = dateFim.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+
+                LocalDate data = resultSet.getObject("data", LocalDate.class);
+                LocalDateTime dataHoraInicio = LocalDateTime.of(data, horaInicio);
+                LocalDateTime dataHoraFim = LocalDateTime.of(data, horaFim);
+
+                disponibilidade.setData(dataHoraInicio);
+                disponibilidade.setHoraInicio(horaInicio);
+                disponibilidade.setHoraFim(horaFim);
 
                 listaDisponibilidade.add(disponibilidade);
             }
@@ -73,48 +87,52 @@ public class DisponibilidadeService {
 
     // Comparar as disponibilidades dos professores da banca, e retornar a que eles
     // tem em comum
-    /*
-     * public LocalDateTime encontrarDataHoraEmComum(List<Disponibilidade>
-     * disponibilidadesProfessor1, List<Disponibilidade> disponibilidadesProfessor2,
-     * List<Disponibilidade> disponibilidadesProfessor3) {
-     * for (Disponibilidade disponibilidade1 : disponibilidadesProfessor1) {
-     * for (Disponibilidade disponibilidade2 : disponibilidadesProfessor2) {
-     * for (Disponibilidade disponibilidade3 : disponibilidadesProfessor3) {
-     * if (disponibilidade1.getData().equals(disponibilidade2.getData()) &&
-     * disponibilidade1.getData().equals(disponibilidade3.getData()) &&
-     * disponibilidade1.getHoraInicio().equals(disponibilidade2.getHoraInicio()) &&
-     * disponibilidade1.getHoraInicio().equals(disponibilidade3.getHoraInicio()) &&
-     * disponibilidade1.getHoraFim().equals(disponibilidade2.getHoraFim()) &&
-     * disponibilidade1.getHoraFim().equals(disponibilidade3.getHoraFim())) {
-     * // A data e horário em comum foram encontrados
-     * return disponibilidade1.getData();
-     * }
-     * }
-     * }
-     * }
-     * 
-     * // Nenhum horário em comum foi encontrado
-     * return null;
-     * }
-     */
-    public Disponibilidade encontrarDataHoraEmComum(List<Disponibilidade> disponibilidadesProfessor1,
+    public LocalDate encontrarDataEmComum(List<Disponibilidade> disponibilidadesProfessor1,
             List<Disponibilidade> disponibilidadesProfessor2, List<Disponibilidade> disponibilidadesProfessor3) {
+
         for (Disponibilidade disponibilidade1 : disponibilidadesProfessor1) {
             for (Disponibilidade disponibilidade2 : disponibilidadesProfessor2) {
                 for (Disponibilidade disponibilidade3 : disponibilidadesProfessor3) {
-                    if (disponibilidade1.getData().equals(disponibilidade2.getData()) &&
-                            disponibilidade1.getData().equals(disponibilidade3.getData()) &&
-                            disponibilidade1.getHoraInicio().equals(disponibilidade2.getHoraInicio()) &&
-                            disponibilidade1.getHoraInicio().equals(disponibilidade3.getHoraInicio()) &&
-                            disponibilidade1.getHoraFim().equals(disponibilidade2.getHoraFim()) &&
-                            disponibilidade1.getHoraFim().equals(disponibilidade3.getHoraFim())) {
-                        // A data e horário em comum foram encontrados
-                        return disponibilidade1;
+                    if (disponibilidade1.getData().toLocalDate().isEqual(disponibilidade2.getData().toLocalDate())
+                            && disponibilidade1.getData().toLocalDate()
+                                    .isEqual(disponibilidade3.getData().toLocalDate())
+                            && disponibilidade1.getHoraInicio().equals(disponibilidade2.getHoraInicio())
+                            && disponibilidade1.getHoraInicio().equals(disponibilidade3.getHoraInicio())
+                            && disponibilidade1.getHoraFim().equals(disponibilidade2.getHoraFim())
+                            && disponibilidade1.getHoraFim().equals(disponibilidade3.getHoraFim())) {
+                        // A data encontrada em comum
+                        return disponibilidade1.getData().toLocalDate();
                     }
                 }
             }
         }
-        return null; // Nenhuma data e horário em comum encontrados
+
+        // Nenhuma data em comum foi encontrada
+        return null;
+    }
+
+    public LocalTime encontrarHoraEmComum(List<Disponibilidade> disponibilidadesProfessor1,
+            List<Disponibilidade> disponibilidadesProfessor2, List<Disponibilidade> disponibilidadesProfessor3,
+            LocalDate dataComum) {
+        for (Disponibilidade disponibilidade1 : disponibilidadesProfessor1) {
+            for (Disponibilidade disponibilidade2 : disponibilidadesProfessor2) {
+                for (Disponibilidade disponibilidade3 : disponibilidadesProfessor3) {
+                    if (disponibilidade1.getData().toLocalDate().isEqual(dataComum) &&
+                            disponibilidade2.getData().toLocalDate().isEqual(dataComum) &&
+                            disponibilidade3.getData().toLocalDate().isEqual(dataComum) &&
+                            disponibilidade1.getHoraInicio().isBefore(disponibilidade2.getHoraFim()) &&
+                            disponibilidade1.getHoraInicio().isBefore(disponibilidade3.getHoraFim()) &&
+                            disponibilidade2.getHoraInicio().isBefore(disponibilidade1.getHoraFim()) &&
+                            disponibilidade2.getHoraInicio().isBefore(disponibilidade3.getHoraFim()) &&
+                            disponibilidade3.getHoraInicio().isBefore(disponibilidade1.getHoraFim()) &&
+                            disponibilidade3.getHoraInicio().isBefore(disponibilidade2.getHoraFim())) {
+                        // Encontrada uma hora em comum dentro dos intervalos de início e fim
+                        return disponibilidade1.getHoraInicio();
+                    }
+                }
+            }
+        }
+        return null; // Se nenhuma hora em comum for encontrada
     }
 
     // Se não tiver, pedir pra preencher de novo

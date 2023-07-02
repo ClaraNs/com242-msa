@@ -1,7 +1,7 @@
 package br.com.criandoapi.projeto.model;
 
-import java.sql.Time;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -34,10 +34,10 @@ public class Disponibilidade {
     private LocalDateTime data;
 
     @Column(name = "horainicio", nullable = false)
-    private Time horaInicio;
+    private LocalTime horaInicio;
 
     @Column(name = "horafim", nullable = false)
-    private Time horaFim;
+    private LocalTime horaFim;
 
     // getters and setters
 
@@ -73,19 +73,19 @@ public class Disponibilidade {
         this.data = data;
     }
 
-    public Time getHoraInicio() {
+    public LocalTime getHoraInicio() {
         return horaInicio;
     }
 
-    public void setHoraInicio(Time horaInicio) {
+    public void setHoraInicio(LocalTime horaInicio) {
         this.horaInicio = horaInicio;
     }
 
-    public Time getHoraFim() {
+    public LocalTime getHoraFim() {
         return horaFim;
     }
 
-    public void setHoraFim(Time horaFim) {
+    public void setHoraFim(LocalTime horaFim) {
         this.horaFim = horaFim;
     }
 }
