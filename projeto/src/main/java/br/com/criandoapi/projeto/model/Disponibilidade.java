@@ -1,0 +1,92 @@
+package br.com.criandoapi.projeto.model;
+
+import java.sql.Date;
+import java.sql.Time;
+import java.time.LocalDateTime;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "disponibilidade")
+public class Disponibilidade {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "iddisponibilidade")
+    private Integer idDisponibilidade;
+    
+    @ManyToOne
+    @JoinColumn(name = "professor", referencedColumnName = "matricula", foreignKey = @ForeignKey(name = "fk_disponibilidade_professor"), nullable = false)
+    private Professor professor;
+
+    @ManyToOne
+    @JoinColumn(name = "idbanca", referencedColumnName = "idbanca", foreignKey = @ForeignKey(name = "fk_disponibilidade_banca"), nullable = false)
+    private Banca banca;
+
+    @Column(name = "data", nullable = false)
+    private Date data;
+
+    @Column(name = "horainicio", nullable = false)
+    private Time horaInicio;
+
+    @Column(name = "horafim", nullable = false)
+    private Time horaFim;
+
+    // getters and setters
+
+    public Integer getIdDisponibilidade() {
+        return idDisponibilidade;
+    }
+
+    public void setIdDisponibilidade(Integer idDisponibilidade) {
+        this.idDisponibilidade = idDisponibilidade;
+    }
+
+    public Professor getProfessor() {
+        return professor;
+    }
+
+    public void setProfessor(Professor professor) {
+        this.professor = professor;
+    }
+
+    public Banca getBanca() {
+        return banca;
+    }
+
+    public void setBanca(Banca banca) {
+        this.banca = banca;
+    }
+
+    public Date getData() {
+        return data;
+    }
+
+    public void setData(Date data) {
+        this.data = data;
+    }
+
+    public Time getHoraInicio() {
+        return horaInicio;
+    }
+
+    public void setHoraInicio(Time horaInicio) {
+        this.horaInicio = horaInicio;
+    }
+
+    public Time getHoraFim() {
+        return horaFim;
+    }
+
+    public void setHoraFim(Time horaFim) {
+        this.horaFim = horaFim;
+    }
+}

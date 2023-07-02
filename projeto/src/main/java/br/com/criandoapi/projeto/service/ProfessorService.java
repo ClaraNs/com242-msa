@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import br.com.criandoapi.projeto.DAO.IProfessor;
 import br.com.criandoapi.projeto.config.DatabaseConfig;
+import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Professor;
 
 @Service
@@ -47,6 +48,10 @@ public class ProfessorService {
         }
 
         return null; // Retorna null se o professor não for encontrado
+    }
+
+    public Professor FindProfessorById(String idProfessor) {
+        return dao.findById(idProfessor).orElse(null);
     }
 
 }

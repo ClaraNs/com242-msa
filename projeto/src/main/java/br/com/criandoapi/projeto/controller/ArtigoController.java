@@ -105,6 +105,7 @@ public class ArtigoController {
         return novoArtigo;
     }
 
+    // NÃO SERIA PUT?
     @PostMapping("artigoavaliacao/{idArtigo}")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
         @RequestParam("idStatus") Integer idStatus,
@@ -117,6 +118,7 @@ public class ArtigoController {
             //Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
             status = statusArtigoService.findStatusArtigoById(idStatus);
+            artigo.setStatus(status); //?
 
             //String consideracoes = (String) requestBody.get("consideracoes");
             artigo.setConsideracoes(consideracoes);

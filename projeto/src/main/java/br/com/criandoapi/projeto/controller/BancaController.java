@@ -1,11 +1,13 @@
 package br.com.criandoapi.projeto.controller;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.ArrayList;
 import java.util.List;
+import java.sql.Date;  // Importe a classe java.sql.Date
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 //import javax.servlet.ServletContext;
 
@@ -22,11 +24,13 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.criandoapi.projeto.DAO.IBanca;
 import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Banca;
+import br.com.criandoapi.projeto.model.Disponibilidade;
 import br.com.criandoapi.projeto.model.Professor;
 //import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.model.StatusBanca;
 import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.BancaService;
+import br.com.criandoapi.projeto.service.DisponibilidadeService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 
 @RestController
@@ -38,13 +42,16 @@ public class BancaController {
     private final ProfessorService professorService;
     private final ArtigoService artigoService;
     private final BancaService bancaService;
+    private final DisponibilidadeService disponibilidadeService;
 
     @Autowired
-    public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService, BancaService bancaService) {
+    public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService,
+            BancaService bancaService, DisponibilidadeService disponibilidadeService) {
         this.dao = dao;
         this.professorService = professorService;
         this.artigoService = artigoService;
         this.bancaService = bancaService;
+        this.disponibilidadeService = disponibilidadeService;
     }
 
     @GetMapping("/banca")
@@ -98,4 +105,60 @@ public class BancaController {
         }
     }
 
+    // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
+    @PostMapping("/bancacadastraavaliacao/{idArtigo}")
+    public String cadastrarAvaliacao(@PathVariable Integer idArtigo) {
+
+        List<Integer> bancas = bancaService.getBancasByArtigoAvaliado(idArtigo);
+
+        // pegar professores da banca e o orientador, pegar a disponibilidade deles
+        List<Disponibilidade> disponibilidadesProfessor1 = new ArrayList<>();
+        List<Disponibilidade> disponibilidadesProfessor2 = new ArrayList<>();
+        List<Disponibilidade> disponibilidadesProfessor3 = new ArrayList<>();
+        int counter = 1; // Counter variable
+
+        for (Integer bancaId : bancas) {
+            Banca banca = bancaService.getBancaById(bancaId);
+            Professor professor = new Professor();
+            professor = banca.getProfessorAvaliador();
+            String matricula = professor.getMatricula();
+
+            //List<Disponibilidade> disponibilidades;
+
+            if (counter == 1) {
+                disponibilidadesProfessor1 = disponibilidadeService.getDisponibilidadesPorMatricula(matricula, bancaId);
+            } else if (counter == 2) {
+                disponibilidadesProfessor2 = disponibilidadeService.getDisponibilidadesPorMatricula(matricula, bancaId);
+            }
+
+            // Increment the counter
+            counter = (counter % 2) + 1;
+
+        }
+
+        Artigo artigo = new Artigo();
+        artigo = artigoService.findArtigoByid(idArtigo);
+    
+        Professor orientador = new Professor();
+        orientador = artigo.getOrientador();
+
+        // Como fica o orientador?? Está disponível em relação a qual banca? A banca de menor número
+        disponibilidadesProfessor3 = disponibilidadeService.getDisponibilidadesPorMatricula(orientador.getMatricula(), bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
+
+        // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
+        Date dataAvaliacao = disponibilidadeService.encontrarDataHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
+
+        if( dataAvaliacao != null){
+            for (Integer bancaId : bancas) {
+                Banca banca = bancaService.getBancaById(bancaId);
+                LocalDateTime dataHora = LocalDateTime.ofInstant(dataAvaliacao.toInstant(), ZoneId.systemDefault());
+                banca.setDataAvaliacao(dataHora);
+                banca.setDataHora(dataHora);
+            }
+
+            return "Horário de avaliação cadastrado com sucesso";
+        } else {
+            return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
+        }
+    }
 }
