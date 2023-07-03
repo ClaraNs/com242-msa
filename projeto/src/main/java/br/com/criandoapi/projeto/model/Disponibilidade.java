@@ -33,12 +33,6 @@ public class Disponibilidade {
     @Column(name = "data", nullable = false)
     private LocalDateTime data;
 
-    @Column(name = "horainicio", nullable = false)
-    private LocalTime horaInicio;
-
-    @Column(name = "horafim", nullable = false)
-    private LocalTime horaFim;
-
     // getters and setters
 
     public Integer getIdDisponibilidade() {
@@ -71,21 +65,5 @@ public class Disponibilidade {
 
     public void setData(LocalDateTime data) {
         this.data = data;
-    }
-
-    public LocalTime getHoraInicio() {
-        return horaInicio;
-    }
-
-    public void setHoraInicio(LocalTime horaInicio) {
-        this.horaInicio = horaInicio;
-    }
-
-    public LocalTime getHoraFim() {
-        return horaFim;
-    }
-
-    public void setHoraFim(LocalTime horaFim) {
-        this.horaFim = horaFim;
     }
 }

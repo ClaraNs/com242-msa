@@ -145,22 +145,21 @@ public class BancaController {
         disponibilidadesProfessor3 = disponibilidadeService.getDisponibilidadesPorMatricula(orientador.getMatricula(), bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
 
         // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
-        LocalDate dataAvaliacao = disponibilidadeService.encontrarDataEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
-        LocalTime horaAvaliacao = disponibilidadeService.encontrarHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3, dataAvaliacao);
+        LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
+        //LocalTime horaAvaliacao = disponibilidadeService.encontrarHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3/*, dataAvaliacao*/);
 
-        if( dataAvaliacao != null && horaAvaliacao != null){
+        if( dataAvaliacao != null){
             
             for (Integer bancaId : bancas) {
                 Banca banca = new Banca();
                 banca = bancaService.getBancaById(bancaId);
-                banca.setDataAvaliacao(dataAvaliacao.atTime(horaAvaliacao));
-                banca.setDataHora(dataAvaliacao.atTime(horaAvaliacao));
-                System.out.println("ID DA BANCA:  " + bancaId);
-
+                banca.setDataAvaliacao(dataAvaliacao);
+                banca.setDataHora(dataAvaliacao);
+                
                 dao.save(banca);
             }
 
-            return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao + " " + horaAvaliacao;
+            return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
         } else {
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
         }

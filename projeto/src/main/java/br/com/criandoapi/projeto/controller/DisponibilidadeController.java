@@ -54,8 +54,7 @@ public class DisponibilidadeController {
     public ResponseEntity<String> cadastraDisponibilidade(@PathVariable Integer idBanca,
             @ModelAttribute("idProfessor") String idProfessor,
             @ModelAttribute("data") String dataString,
-            @ModelAttribute("horaInicio") String horaInicioString,
-            @ModelAttribute("horaFim") String horaFimString) {
+            @ModelAttribute("horaInicio") String horaInicioString) {
         // Obtenha o objeto Banca do banco de dados com base no ID
         Banca banca = bancaService.getBancaById(idBanca);
 
@@ -68,11 +67,7 @@ public class DisponibilidadeController {
 
             LocalDate data_convertida = LocalDate.parse(dataString);
             LocalTime horaInicio = LocalTime.parse(horaInicioString);
-            LocalTime horaFim = LocalTime.parse(horaFimString);
-    
-            disponibilidade.setData(data_convertida.atStartOfDay());
-            disponibilidade.setHoraInicio(horaInicio);
-            disponibilidade.setHoraFim(horaFim);
+            disponibilidade.setData(data_convertida.atTime(horaInicio));
 
             // Salve
             dao.save(disponibilidade);
@@ -89,8 +84,7 @@ public class DisponibilidadeController {
     public ResponseEntity<String> cadastraDisponibilidadeOrientador(@PathVariable Integer idArtigo,
             @RequestParam("idProfessor") String idProfessor,
             @RequestParam("data") String dataString,
-            @RequestParam("horaInicio") String horaInicioString,
-            @RequestParam("horaFim") String horaFimString) {
+            @RequestParam("horaInicio") String horaInicioString) {
 
         // O orientador fica disponível em relação ao menor ID das bancas relacionadas a aquele artigo
         Banca banca = bancaService.getBancaById(bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
@@ -103,11 +97,8 @@ public class DisponibilidadeController {
             disponibilidade.setProfessor(professor);
             LocalDate data_convertida = LocalDate.parse(dataString);
             LocalTime horaInicio = LocalTime.parse(horaInicioString);
-            LocalTime horaFim = LocalTime.parse(horaFimString);
 
-            disponibilidade.setData(data_convertida.atStartOfDay());
-            disponibilidade.setHoraInicio(horaInicio);
-            disponibilidade.setHoraFim(horaFim);
+            disponibilidade.setData(data_convertida.atTime(horaInicio));
 
             // Salve
             dao.save(disponibilidade);
