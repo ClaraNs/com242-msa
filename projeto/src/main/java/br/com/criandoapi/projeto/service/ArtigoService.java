@@ -1,6 +1,5 @@
 package br.com.criandoapi.projeto.service;
 
-import java.io.Console;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

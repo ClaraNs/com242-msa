@@ -9,29 +9,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestParam;
 
-import br.com.criandoapi.projeto.model.StatusArtigo;
-import br.com.criandoapi.projeto.DAO.IStatusArtigo;
+import br.com.criandoapi.projeto.DAO.IStatusBanca;
 import br.com.criandoapi.projeto.config.DatabaseConfig;
+import br.com.criandoapi.projeto.model.StatusBanca;
 
 @Service
-public class StatusArtigoService {
-
-    private final IStatusArtigo dao;
+public class StatusBancaService {
+    private final IStatusBanca dao;
     private final DatabaseConfig databaseConfig;
 
     @Autowired
-    public StatusArtigoService(IStatusArtigo dao, DatabaseConfig databaseConfig) {
+    public StatusBancaService(IStatusBanca dao, DatabaseConfig databaseConfig) {
         this.dao = dao;
         this.databaseConfig = databaseConfig;
     }
-    
-    public StatusArtigo findStatusArtigoById(@RequestParam("id") Integer statusId) {
+
+    public StatusBanca findStatusArtigoById(@RequestParam("id") Integer statusId) {
         try (Connection connection = databaseConfig.getConnection();
-                PreparedStatement statement = connection.prepareStatement("SELECT * FROM statusartigo WHERE id = ?")) {
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM statusbanca WHERE id = ?")) {
             statement.setInt(1, statusId);
             ResultSet resultSet = statement.executeQuery();
             if (resultSet.next()) {
-                StatusArtigo status = new StatusArtigo();
+                StatusBanca status = new StatusBanca();
                 status.setId(resultSet.getInt("id"));
                 status.setDescricao(resultSet.getString("descricao"));
 

@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import br.com.criandoapi.projeto.DAO.IProfessor;
 import br.com.criandoapi.projeto.config.DatabaseConfig;
-import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Professor;
 
 @Service

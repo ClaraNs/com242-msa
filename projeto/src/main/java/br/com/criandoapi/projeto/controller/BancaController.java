@@ -1,14 +1,10 @@
 package br.com.criandoapi.projeto.controller;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Date;  // Importe a classe java.sql.Date
-import java.time.LocalDate;
-import java.time.LocalTime;
-
-//import javax.servlet.ServletContext;
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -19,18 +15,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-//import br.com.criandoapi.projeto.DAO.IArtigo;
 import br.com.criandoapi.projeto.DAO.IBanca;
 import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Disponibilidade;
 import br.com.criandoapi.projeto.model.Professor;
-//import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.model.StatusBanca;
+import br.com.criandoapi.projeto.service.AlunoService;
 import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.DisponibilidadeService;
+import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.StatusBancaService;
 
 @RestController
 @CrossOrigin("*")
@@ -42,15 +39,22 @@ public class BancaController {
     private final ArtigoService artigoService;
     private final BancaService bancaService;
     private final DisponibilidadeService disponibilidadeService;
+    private final StatusBancaService statusBancaService;
+    private final AlunoService alunoService;
+    private final EmailService emailService;
 
     @Autowired
     public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService,
-            BancaService bancaService, DisponibilidadeService disponibilidadeService) {
+            BancaService bancaService, DisponibilidadeService disponibilidadeService, 
+            StatusBancaService statusBancaService, AlunoService alunoService, EmailService emailService) {
         this.dao = dao;
         this.professorService = professorService;
         this.artigoService = artigoService;
         this.bancaService = bancaService;
         this.disponibilidadeService = disponibilidadeService;
+        this.statusBancaService = statusBancaService;
+        this.alunoService = alunoService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/banca")
@@ -79,7 +83,10 @@ public class BancaController {
             Banca banca1 = new Banca();
             Artigo artigo = artigoService.findArtigoByid(idartigo);
             StatusBanca status = new StatusBanca();
-            status.setId(0); // Set the ID of the desired status
+            status = statusBancaService.findStatusArtigoById(0);
+            /*status = statusArtigoService.findStatusArtigoById(idStatus);
+            artigo.setStatus(status); // ? */
+            //status.setId(0); // Set the ID of the desired status
 
             banca1.setProfessorAvaliador(professor1);
             banca1.setDataRegistro(dia);
@@ -97,6 +104,20 @@ public class BancaController {
             // Salve as bancas no banco de dados
             dao.save(banca1);
             dao.save(banca2);
+
+            // mudar para email do Orientador depois
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idartigo);
+            String destinatario2 = alunoService.getEmailOrientadorByArtigoId(idartigo);
+            String assunto = "Solicitação de Banca - MSA";
+            String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando liberação do coordenador de TFG.\n\nObrigado.";
+
+            try {
+                emailService.enviarEmail(destinatario, assunto, mensagem);
+                emailService.enviarEmail(destinatario2, assunto, mensagem);
+                System.out.println("E-mail enviado com sucesso.");
+            } catch (MessagingException e) {
+                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+            }
 
             return "Bancas cadastradas com sucesso.";
         } else {
@@ -154,9 +175,27 @@ public class BancaController {
                 Banca banca = new Banca();
                 banca = bancaService.getBancaById(bancaId);
                 banca.setDataAvaliacao(dataAvaliacao);
-                banca.setDataHora(dataAvaliacao);
+                StatusBanca status = new StatusBanca();
+                status = statusBancaService.findStatusArtigoById(2);
+                banca.setStatus(status);
                 
                 dao.save(banca);
+            }
+
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String destinatario2 = alunoService.getEmailOrientadorByArtigoId(idArtigo);
+            //getEmailBancaByArtigoId
+            String assunto = "Data para defesa confirmada - MSA";
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            String dataFormatada = dataAvaliacao.format(formatter);
+            String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" + artigo.getTitulo() + "\" foi confirmada na plataforma para o dia " + dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
+
+            try {
+                emailService.enviarEmail(destinatario, assunto, mensagem);
+                emailService.enviarEmail(destinatario2, assunto, mensagem);
+                System.out.println("E-mail enviado com sucesso.");
+            } catch (MessagingException e) {
+                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
             }
 
             return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;

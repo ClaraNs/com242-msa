@@ -1,7 +1,5 @@
 package br.com.criandoapi.projeto.controller;
 
-import java.sql.Date;
-import java.sql.Time;
 import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,7 +20,6 @@ import br.com.criandoapi.projeto.DAO.IDisponibilidade;
 import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Disponibilidade;
 import br.com.criandoapi.projeto.model.Professor;
-import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 
@@ -33,15 +30,13 @@ public class DisponibilidadeController {
 
     private IDisponibilidade dao;
     private final ProfessorService professorService;
-    private final ArtigoService artigoService;
     private final BancaService bancaService;
 
     @Autowired
     public DisponibilidadeController(IDisponibilidade dao, ProfessorService professorService,
-            ArtigoService artigoService, BancaService bancaService) {
+        BancaService bancaService) {
         this.dao = dao;
         this.professorService = professorService;
-        this.artigoService = artigoService;
         this.bancaService = bancaService;
     }
 

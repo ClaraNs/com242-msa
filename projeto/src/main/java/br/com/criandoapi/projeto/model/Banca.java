@@ -1,8 +1,6 @@
 package br.com.criandoapi.projeto.model;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
@@ -21,9 +19,6 @@ public class Banca {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idbanca")
     private Integer idBanca;
-
-    @Column(name = "datahora")
-    private LocalDateTime dataHora;
 
     @Column(name = "dataregistro", nullable = false)
     private LocalDateTime dataRegistro;
@@ -57,14 +52,6 @@ public class Banca {
 
     public void setIdBanca(Integer idBanca) {
         this.idBanca = idBanca;
-    }
-
-    public LocalDateTime getDataHora() {
-        return dataHora;
-    }
-
-    public void setDataHora(LocalDateTime dataHora) {
-        this.dataHora = dataHora;
     }
 
     public LocalDateTime getDataRegistro() {

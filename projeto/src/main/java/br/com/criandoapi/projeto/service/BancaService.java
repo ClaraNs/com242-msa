@@ -49,10 +49,6 @@ public class BancaService {
                 StatusBanca status = new StatusBanca();
                 status.setId(resultSet.getInt("status"));
 
-                Timestamp dataHora = resultSet.getTimestamp("dataHora");
-                if (dataHora != null) {
-                    banca.setDataHora(dataHora.toLocalDateTime());
-                }
                 Timestamp dataAvaliacao = resultSet.getTimestamp("dataAvaliacao");
                 if (dataAvaliacao != null) {
                     banca.setDataAvaliacao(dataAvaliacao.toLocalDateTime());

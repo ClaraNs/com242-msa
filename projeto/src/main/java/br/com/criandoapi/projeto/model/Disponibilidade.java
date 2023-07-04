@@ -1,8 +1,6 @@
 package br.com.criandoapi.projeto.model;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.ForeignKey;
