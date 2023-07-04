@@ -30,7 +30,7 @@ public class ArtigoService {
         this.databaseConfig = databaseConfig;
     }
 
-    public Artigo findArtigoByid(@RequestParam("id") Integer idartigo) {
+    public Artigo findArtigoByid(Integer idartigo) {
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM artigo WHERE idArtigo = ?")) {
             statement.setInt(1, idartigo);
@@ -168,6 +168,13 @@ public class ArtigoService {
         }
 
         return artigos;
+    }
+
+    public void setarNota(Integer idArtigo, Float nota){
+        Artigo artigo = new Artigo();
+        artigo = findArtigoByid(idArtigo);
+        artigo.setNotaFinal(nota);
+        dao.save(artigo);
     }
 
 }

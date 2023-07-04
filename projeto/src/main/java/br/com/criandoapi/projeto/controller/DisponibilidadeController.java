@@ -45,7 +45,7 @@ public class DisponibilidadeController {
         return (List<Disponibilidade>) dao.findAll();
     }
 
-    @PostMapping("disponibilidadebanca/{idBanca}")
+    @PostMapping("disponibilidade/banca/{idBanca}")
     public ResponseEntity<String> cadastraDisponibilidade(@PathVariable Integer idBanca,
             @ModelAttribute("idProfessor") String idProfessor,
             @ModelAttribute("data") String dataString,
@@ -75,7 +75,7 @@ public class DisponibilidadeController {
     }
 
     //SELECT MIN(b.idBanca) from banca b JOIN artigo a ON a.idArtigo = b.artigoAvaliado
-    @PostMapping("disponibilidadebancaorientador/{idArtigo}")
+    @PostMapping("disponibilidade/orientador/{idArtigo}/banca")
     public ResponseEntity<String> cadastraDisponibilidadeOrientador(@PathVariable Integer idArtigo,
             @RequestParam("idProfessor") String idProfessor,
             @RequestParam("data") String dataString,

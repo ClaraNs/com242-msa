@@ -26,8 +26,8 @@ public class ProfessorService {
         this.databaseConfig = databaseConfig;
     }
 
-    @GetMapping("/professor/nome")
-    public Professor findProfessorByNome(@RequestParam("nome") String nomeProfessor) {
+    //@GetMapping("/professor/nome")
+    public Professor findProfessorByNome(/*@RequestParam("nome")*/ String nomeProfessor) {
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection
                         .prepareStatement("SELECT * FROM professor WHERE nome LIKE ?")) {

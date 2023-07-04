@@ -58,12 +58,12 @@ public class ArtigoController {
         return (List<Artigo>) dao.findAll();
     }
 
-    @GetMapping("/artigopormatricula/{matricula}")
+    @GetMapping("/aluno/{matricula}/artigos")
     public List<Artigo> listaArtigosAluno(@PathVariable String matricula) {
         return artigoService.getArtigosPorMatriculaAluno(matricula);
     }
 
-    @GetMapping("/artigopororientador/{matricula}")
+    @GetMapping("/orientador/{matricula}/artigos")
     public List<Artigo> listaArtigosOrientador(@PathVariable String matricula) {
         return artigoService.getArtigosPorMatriculaOrientador(matricula);
     }
@@ -99,8 +99,7 @@ public class ArtigoController {
 
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         Artigo novoArtigo = dao.save(artigo);
-
-        artigo.setUrl("/artigodownload/" + artigo.getIdArtigo());
+        artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
 
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         novoArtigo = dao.save(artigo);
@@ -119,8 +118,7 @@ public class ArtigoController {
         return novoArtigo;
     }
 
-    // NÃO SERIA PUT?
-    @PostMapping("artigoavaliacao/{idArtigo}")
+    @PostMapping("artigo/{idArtigo}/avaliacao")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
             @RequestParam("idStatus") Integer idStatus,
             @RequestParam("consideracoes") String consideracoes) {
@@ -142,8 +140,7 @@ public class ArtigoController {
             // Salve as alterações no artigo
             dao.save(artigo);
 
-            Aluno aluno = artigo.getEnviadoPor();
-            String destinatario = aluno.getEmail();
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
             String assunto = "Mudança no Status do Artigo - MSA";
             String mensagem = "";
 
@@ -168,7 +165,7 @@ public class ArtigoController {
         }
     }
 
-    @GetMapping("artigodownload/{idArtigo}")
+    @GetMapping("artigo/{idArtigo}/download")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Integer idArtigo) {
         // Obtenha o objeto Artigo do banco de dados com base no ID
         Artigo artigo = dao.findById(idArtigo).orElse(null);

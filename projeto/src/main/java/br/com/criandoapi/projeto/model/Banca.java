@@ -44,6 +44,9 @@ public class Banca {
     @Column(name = "nota")
     private Float nota;
 
+    @Column(name = "consideracoes")
+    private String consideracoes;
+
     // getters and setters
 
     public Integer getIdBanca() {
@@ -108,5 +111,13 @@ public class Banca {
 
     public void setNota(Float nota) {
         this.nota = nota;
+    }
+
+    public String getConsideracoes() {
+        return consideracoes;
+    }
+
+    public void setConsideracoes(String consideracoes) {
+        this.consideracoes = consideracoes;
     }
 }
