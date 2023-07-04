@@ -12,7 +12,7 @@ public class EmailService {
     private static final String SMTP_HOST = "smtp.titan.email"; // Host SMTP do Titan
     private static final String SMTP_PORT = "465"; // Porta SMTP do Titan
     private static final String SMTP_USERNAME = "equipe@it-a-kitchen.live"; // Seu endereço de e-mail do Titan
-    private static final String SMTP_PASSWORD = "unifei2023."; // Sua senha de e-mail do Titan
+    private static final String SMTP_PASSWORD = ""; // Sua senha de e-mail do Titan
     private static final String IMAP_HOST = "imap.titan.email"; // Host IMAP do Titan
     private static final String IMAP_PORT = "993"; // Porta IMAP do Titan
 
