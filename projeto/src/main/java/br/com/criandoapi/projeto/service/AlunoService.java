@@ -47,4 +47,15 @@ public class AlunoService {
 
         return null; // Retorna null se o aluno não for encontrado
     }
+
+    public String getEmailByMatricula(String matricula){
+        Aluno aluno = new Aluno();
+        aluno = findAlunoByMatricula(matricula);
+
+        if(aluno != null){
+            return aluno.getEmail();
+        } else {
+            return null;
+        }
+    }
 }

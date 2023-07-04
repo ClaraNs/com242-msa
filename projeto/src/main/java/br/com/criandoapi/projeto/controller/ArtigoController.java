@@ -5,7 +5,6 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +15,7 @@ import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import br.com.criandoapi.projeto.DAO.IArtigo;
 import br.com.criandoapi.projeto.model.Aluno;
@@ -24,11 +24,11 @@ import br.com.criandoapi.projeto.model.Professor;
 import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.service.AlunoService;
 import br.com.criandoapi.projeto.service.ArtigoService;
+import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 import br.com.criandoapi.projeto.service.StatusArtigoService;
 
-import java.util.List;
-import java.util.Map;
+import javax.mail.MessagingException;
 
 @RestController
 @CrossOrigin("*")
@@ -40,15 +40,17 @@ public class ArtigoController {
     private final AlunoService alunoService;
     private final ArtigoService artigoService;
     private final StatusArtigoService statusArtigoService;
+    private final EmailService emailService;
 
     @Autowired
     public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService,
-            ArtigoService artigoService, StatusArtigoService statusArtigoService) {
+            ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
         this.artigoService = artigoService;
         this.statusArtigoService = statusArtigoService;
+        this.emailService = emailService;
     }
 
     @GetMapping("/artigo")
@@ -84,7 +86,8 @@ public class ArtigoController {
         // Crie um novo objeto Artigo com os campos preenchidos
         Artigo artigo = new Artigo();
         StatusArtigo status = new StatusArtigo();
-        status.setId(0);
+        status = statusArtigoService.findStatusArtigoById(0);
+
         artigo.setTitulo(titulo);
         artigo.setArquivo(arquivoBytes);
         artigo.setResumo(resumo);
@@ -102,30 +105,61 @@ public class ArtigoController {
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         novoArtigo = dao.save(artigo);
 
+        String destinatario = aluno.getEmail();
+        String assunto = "Artigo Submetido - MSA";
+        String mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
+
+        try {
+            emailService.enviarEmail(destinatario, assunto, mensagem);
+            System.out.println("E-mail enviado com sucesso.");
+        } catch (MessagingException e) {
+            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+        }
+
         return novoArtigo;
     }
 
     // NÃO SERIA PUT?
     @PostMapping("artigoavaliacao/{idArtigo}")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
-        @RequestParam("idStatus") Integer idStatus,
-        @RequestParam("consideracoes") String consideracoes)  {
+            @RequestParam("idStatus") Integer idStatus,
+            @RequestParam("consideracoes") String consideracoes) {
         // Obtenha o objeto Artigo do banco de dados com base no ID
-        Artigo artigo = dao.findById(idArtigo).orElse(null);
+        Artigo artigo = new Artigo();
+        artigo = dao.findById(idArtigo).orElse(null);
 
         if (artigo != null) {
             // Atualize o status e as considerações do artigo
-            //Integer idStatus = (Integer) requestBody.get("idStatus");
+            // Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
             status = statusArtigoService.findStatusArtigoById(idStatus);
-            artigo.setStatus(status); //?
+            artigo.setStatus(status); // ?
 
-            //String consideracoes = (String) requestBody.get("consideracoes");
+            // String consideracoes = (String) requestBody.get("consideracoes");
             artigo.setConsideracoes(consideracoes);
             artigo.setAlteracao(LocalDateTime.now());
 
             // Salve as alterações no artigo
             dao.save(artigo);
+
+            Aluno aluno = artigo.getEnviadoPor();
+            String destinatario = aluno.getEmail();
+            String assunto = "Mudança no Status do Artigo - MSA";
+            String mensagem = "";
+
+            if(idStatus == 1){
+                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador. Por favor, verifique as correções e faça as devidas alterações.\n\nObrigado.";
+            } else if(idStatus == 2){
+                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
+            }
+  
+
+        try {
+            emailService.enviarEmail(destinatario, assunto, mensagem);
+            System.out.println("E-mail enviado com sucesso.");
+        } catch (MessagingException e) {
+            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+        }
 
             return ResponseEntity.ok("Artigo avaliado com sucesso.");
         } else {
