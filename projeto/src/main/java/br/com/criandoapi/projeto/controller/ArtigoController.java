@@ -68,7 +68,13 @@ public class ArtigoController {
         return artigoService.getArtigosPorMatriculaOrientador(matricula);
     }
 
-    //Listar artigos que esperam a avaliação daquele professor
+    // Lista artigos agurdando liberação do orientador
+    @GetMapping("/orientador/{matricula}/artigos/aguardandocorrecao")
+    public List<Artigo> listaArtigosPendentesOrientador(@PathVariable String matricula) {
+        return artigoService.getArtigosPendentesPorMatriculaOrientador(matricula);
+    }
+
+    // Lista artigos que esperam a avaliação daquele professor (banca)
     @GetMapping("/artigo/aguardandocorrecao/professor/{matricula}")
     public List<Artigo> listaArtigosAseremAvaliados(@PathVariable String matricula){
         return artigoService.getArtigoEsperandoAvaliacao(matricula);
@@ -124,22 +130,25 @@ public class ArtigoController {
         return novoArtigo;
     }
 
-    @PostMapping("artigo/{idArtigo}/avaliacao")
+     @PostMapping("artigo/{idArtigo}/avaliacao")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
-            @RequestParam("idStatus") Integer idStatus,
+            @RequestParam("correcao") Boolean correcao,
             @RequestParam("consideracoes") String consideracoes) {
         // Obtenha o objeto Artigo do banco de dados com base no ID
         Artigo artigo = new Artigo();
         artigo = dao.findById(idArtigo).orElse(null);
+        Integer idStatus = 3; // Não precisa mais de correções
 
         if (artigo != null) {
             // Atualize o status e as considerações do artigo
             // Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
-            status = statusArtigoService.findStatusArtigoById(idStatus);
-            artigo.setStatus(status); // ?
 
-            // String consideracoes = (String) requestBody.get("consideracoes");
+            if(correcao){
+                idStatus = 1;
+            }
+            status = statusArtigoService.findStatusArtigoById(idStatus);
+            artigo.setStatus(status);
             artigo.setConsideracoes(consideracoes);
             artigo.setAlteracao(LocalDateTime.now());
 
@@ -152,7 +161,7 @@ public class ArtigoController {
 
             if(idStatus == 1){
                 mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador. Por favor, verifique as correções e faça as devidas alterações.\n\nObrigado.";
-            } else if(idStatus == 2){
+            } else if(idStatus == 3){
                 mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
             }
   
