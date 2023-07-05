@@ -28,8 +28,7 @@ public class AlunoService {
         this.databaseConfig = databaseConfig;
     }
 
-    @GetMapping("/aluno/{matricula}")
-    public Aluno findAlunoByMatricula(@PathVariable String matricula) {
+    public Aluno findAlunoByMatricula(String matricula) {
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM aluno WHERE matricula = ?")) {
             statement.setString(1, matricula);
