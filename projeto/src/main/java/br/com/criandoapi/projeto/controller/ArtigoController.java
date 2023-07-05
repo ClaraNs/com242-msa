@@ -68,6 +68,12 @@ public class ArtigoController {
         return artigoService.getArtigosPorMatriculaOrientador(matricula);
     }
 
+    //Listar artigos que esperam a avaliação daquele professor
+    @GetMapping("/artigo/aguardandocorrecao/professor/{matricula}")
+    public List<Artigo> listaArtigosAseremAvaliados(@PathVariable String matricula){
+        return artigoService.getArtigoEsperandoAvaliacao(matricula);
+    }
+    
     @PostMapping("/artigoupload")
     public Artigo uploadFile(@RequestParam("pdfFile") MultipartFile file,
             @RequestParam("titulo") String titulo,

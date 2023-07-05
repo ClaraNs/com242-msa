@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,7 @@ public class StatusBancaService {
         this.databaseConfig = databaseConfig;
     }
 
-    public StatusBanca findStatusArtigoById(@RequestParam("id") Integer statusId) {
+    public StatusBanca findStatusBancaById(@RequestParam("id") Integer statusId) {
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM statusbanca WHERE id = ?")) {
             statement.setInt(1, statusId);
@@ -43,4 +44,5 @@ public class StatusBancaService {
 
         return null; // Retorna null se o artigo não for encontrado
     }
+
 }

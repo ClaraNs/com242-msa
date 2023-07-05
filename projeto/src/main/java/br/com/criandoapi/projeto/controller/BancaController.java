@@ -7,7 +7,6 @@ import java.util.List;
 import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,11 +20,11 @@ import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.Disponibilidade;
 import br.com.criandoapi.projeto.model.Professor;
-import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.model.StatusBanca;
 import br.com.criandoapi.projeto.service.AlunoService;
 import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.BancaService;
+import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.DisponibilidadeService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
@@ -44,11 +43,13 @@ public class BancaController {
     private final StatusBancaService statusBancaService;
     private final AlunoService alunoService;
     private final EmailService emailService;
+    private final ComposicaoBancaService composicaoBancaService;
 
     @Autowired
     public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService,
-            BancaService bancaService, DisponibilidadeService disponibilidadeService, 
-            StatusBancaService statusBancaService, AlunoService alunoService, EmailService emailService) {
+            BancaService bancaService, DisponibilidadeService disponibilidadeService,
+            StatusBancaService statusBancaService, AlunoService alunoService, EmailService emailService,
+            ComposicaoBancaService composicaoBancaService) {
         this.dao = dao;
         this.professorService = professorService;
         this.artigoService = artigoService;
@@ -57,6 +58,7 @@ public class BancaController {
         this.statusBancaService = statusBancaService;
         this.alunoService = alunoService;
         this.emailService = emailService;
+        this.composicaoBancaService = composicaoBancaService;
     }
 
     @GetMapping("/banca")
@@ -64,54 +66,34 @@ public class BancaController {
         return (List<Banca>) dao.findAll();
     }
 
-    @GetMapping("/professor/{matricula}/bancas")
-    public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
-        return bancaService.getBancasPorProfessor(matricula);
+    // Bancas aguardando solicitação
+    @GetMapping("/banca/aguardandoaprovacao")
+    public List<Banca> listaBancasPendentes() {
+        return bancaService.getBancasPorStatus(0);
     }
 
-    @PostMapping("/bancacadastro")
-    public String cadastrarBancas(@RequestParam("professor1") String nomeProfessor1,
-            @RequestParam("professor2") String nomeProfessor2,
-            @RequestParam("idartigo") Integer idartigo) {
+    // Post mudança de status pelo coordenador
+    @PostMapping("/banca/aguardandoaprovacao/{idBanca}")
+    public String aprovarBanca(@PathVariable Integer idBanca,
+            @RequestParam("aprovacao") Boolean aprovacao) {
+        Banca banca = new Banca();
+        banca = bancaService.getBancaById(idBanca);
 
-        // Encontre os objetos Professor com base nos nomes informados
-        Professor professor1 = professorService.findProfessorByNome(nomeProfessor1);
-        Professor professor2 = professorService.findProfessorByNome(nomeProfessor2);
+        if (aprovacao) {
+            StatusBanca statusBanca = new StatusBanca();
+            statusBanca = statusBancaService.findStatusBancaById(1);
+            banca.setStatus(statusBanca);
 
-        if (professor1 != null && professor2 != null) {
+            dao.save(banca);
 
-            LocalDateTime dia = LocalDateTime.now();
-            // Crie as novas bancas
-            Banca banca1 = new Banca();
-            Artigo artigo = artigoService.findArtigoByid(idartigo);
-            StatusBanca status = new StatusBanca();
-            status = statusBancaService.findStatusArtigoById(0);
-            /*status = statusArtigoService.findStatusArtigoById(idStatus);
-            artigo.setStatus(status); // ? */
-            //status.setId(0); // Set the ID of the desired status
+            Integer idArtigo = banca.getArtigoAvaliado().getIdArtigo();
 
-            banca1.setProfessorAvaliador(professor1);
-            banca1.setDataRegistro(dia);
-            banca1.setDataAtualizacao(dia);
-            banca1.setArtigoAvaliado(artigo);
-            banca1.setStatus(status);
-
-            Banca banca2 = new Banca();
-            banca2.setProfessorAvaliador(professor2);
-            banca2.setDataRegistro(dia);
-            banca2.setDataAtualizacao(dia);
-            banca2.setArtigoAvaliado(artigo);
-            banca2.setStatus(status);
-
-            // Salve as bancas no banco de dados
-            dao.save(banca1);
-            dao.save(banca2);
-
-            // mudar para email do Orientador depois
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idartigo);
-            String destinatario2 = alunoService.getEmailOrientadorByArtigoId(idartigo);
-            String assunto = "Solicitação de Banca - MSA";
-            String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando liberação do coordenador de TFG.\n\nObrigado.";
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String destinatario2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
+            String assunto = "Banca Liberada - MSA";
+            String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \""
+                    + banca.getArtigoAvaliado().getTitulo()
+                    + "\" foi aprovada na plataforma pelo coordenador de TFG. Agora é necessário inserir as datas e horários disponíveis para que o sistema encontre a melhor data para a avaliação.\n\nObrigado.";
 
             try {
                 emailService.enviarEmail(destinatario, assunto, mensagem);
@@ -121,78 +103,101 @@ public class BancaController {
                 System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
             }
 
-            return "Bancas cadastradas com sucesso.";
+            return "Banca aprovada.";
+        }
+
+        return "Banca ainda aguardando aprovação";
+    }
+
+    /*
+     * @GetMapping("/professor/{matricula}/bancas")
+     * public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
+     * return bancaService.getBancasPorProfessor(matricula);
+     * }
+     */
+
+    @PostMapping("/artigo/{idArtigo}/banca/cadastro")
+    public String cadastrarBancas(@PathVariable Integer idArtigo) {
+        Artigo artigo = artigoService.findArtigoByid(idArtigo);
+
+        // Pronto para banca
+        if (artigo.getStatus().getId() == 2) {
+            Banca banca = new Banca();
+
+            StatusBanca status = new StatusBanca();
+
+            status = statusBancaService.findStatusBancaById(0);
+            LocalDateTime dia = LocalDateTime.now();
+
+            banca.setDataRegistro(dia);
+            banca.setDataAtualizacao(dia);
+            banca.setArtigoAvaliado(artigo);
+            banca.setStatus(status);
+
+            // Salve as bancas no banco de dados
+            dao.save(banca);
+
+            // Avisa aluno e orientador que a banca foi solicitada
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String destinatario2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
+            String assunto = "Solicitação de Banca - MSA";
+            String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \""
+                    + artigo.getTitulo()
+                    + "\" foi submetido na plataforma e está aguardando liberação do coordenador de TFG.\n\nObrigado.";
+
+            try {
+                emailService.enviarEmail(destinatario, assunto, mensagem);
+                emailService.enviarEmail(destinatario2, assunto, mensagem);
+                System.out.println("E-mail enviado com sucesso.");
+            } catch (MessagingException e) {
+                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+            }
+
+            return "Banca cadastradas com sucesso.";
         } else {
-            return "Erro ao cadastrar as bancas. Verifique os nomes dos professores informados.";
+            return "Erro ao cadastrar as bancas. O Orientador ainda não corrigiu o artigo.";
         }
     }
 
+    //Verificação? 
     // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
-    @PostMapping("/banca/{idArtigo}/cadastra/avaliacao")
-    public String cadastrarAvaliacao(@PathVariable Integer idArtigo) {
+    @PostMapping("/banca/{idBanca}/cadastra/avaliacao")
+    public String cadastrarAvaliacao(@PathVariable Integer idBanca) {
+        List<List<Disponibilidade>> todasDisponibilidades = new ArrayList<>();
+        List<Professor> professores = composicaoBancaService.professoresByBancaId(idBanca);
 
-        List<Integer> bancas = bancaService.getBancasByArtigoAvaliado(idArtigo);
-
-        // pegar professores da banca e o orientador, pegar a disponibilidade deles
-        List<Disponibilidade> disponibilidadesProfessor1 = new ArrayList<>();
-        List<Disponibilidade> disponibilidadesProfessor2 = new ArrayList<>();
-        List<Disponibilidade> disponibilidadesProfessor3 = new ArrayList<>();
-        int counter = 1; // Counter variable
-
-        for (Integer bancaId : bancas) {
-            Banca banca = bancaService.getBancaById(bancaId);
-            Professor professor = new Professor();
-            professor = banca.getProfessorAvaliador();
+        // Para cada professor, obtenha suas disponibilidades e adicione na lista de
+        // listas
+        for (Professor professor : professores) {
             String matricula = professor.getMatricula();
-
-            //List<Disponibilidade> disponibilidades;
-
-            if (counter == 1) {
-                disponibilidadesProfessor1 = disponibilidadeService.getDisponibilidadesPorMatricula(matricula, bancaId);
-            } else if (counter == 2) {
-                disponibilidadesProfessor2 = disponibilidadeService.getDisponibilidadesPorMatricula(matricula, bancaId);
-            }
-
-            // Increment the counter
-            counter = (counter % 2) + 1;
-
+            List<Disponibilidade> disponibilidades = disponibilidadeService.getDisponibilidadesPorMatricula(matricula,
+                    idBanca);
+            todasDisponibilidades.add(disponibilidades);
         }
 
-        Artigo artigo = new Artigo();
-        artigo = artigoService.findArtigoByid(idArtigo);
+        LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataEmComum(todasDisponibilidades);
+        Banca banca = new Banca();
+        banca = bancaService.getBancaById(idBanca);
+
+        if (dataAvaliacao != null) {
     
-        Professor orientador = new Professor();
-        orientador = artigo.getOrientador();
+            banca.setDataAvaliacao(dataAvaliacao);
+            StatusBanca status = new StatusBanca();
+            status = statusBancaService.findStatusBancaById(2);
+            banca.setStatus(status);
+            banca.setDataAtualizacao(LocalDateTime.now());
 
-        // Como fica o orientador?? Está disponível em relação a qual banca? A banca de menor número
-        disponibilidadesProfessor3 = disponibilidadeService.getDisponibilidadesPorMatricula(orientador.getMatricula(), bancaService.getPrimeiraBancaByArtigoAvaliado(idArtigo));
+            dao.save(banca);
 
-        // chamar encontrarDataHoraEmComum passando as 3 disponibilidades
-        LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3);
-        //LocalTime horaAvaliacao = disponibilidadeService.encontrarHoraEmComum(disponibilidadesProfessor1, disponibilidadesProfessor2, disponibilidadesProfessor3/*, dataAvaliacao*/);
-
-        if( dataAvaliacao != null){
-            
-            for (Integer bancaId : bancas) {
-                Banca banca = new Banca();
-                banca = bancaService.getBancaById(bancaId);
-                banca.setDataAvaliacao(dataAvaliacao);
-                StatusBanca status = new StatusBanca();
-                status = statusBancaService.findStatusArtigoById(2);
-                banca.setStatus(status);
-                banca.setDataAtualizacao(LocalDateTime.now());
-                
-                dao.save(banca);
-            }
-
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
-            String destinatario2 = alunoService.getEmailOrientadorByArtigoId(idArtigo);
-            //getEmailBancaByArtigoId
+            String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+            String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+            // avisar os demais membros da banca
             String assunto = "Data para defesa confirmada - MSA";
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String dataFormatada = dataAvaliacao.format(formatter);
-            String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" + artigo.getTitulo() + "\" foi confirmada na plataforma para o dia " + dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
-
+            String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
+                     banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
+                    dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
             try {
                 emailService.enviarEmail(destinatario, assunto, mensagem);
                 emailService.enviarEmail(destinatario2, assunto, mensagem);
@@ -202,12 +207,17 @@ public class BancaController {
             }
 
             return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
-        } else {
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
-            String destinatario2 = alunoService.getEmailOrientadorByArtigoId(idArtigo);
-            String assunto = "Aguardando confirmação da data - MSA";
-            String mensagem = "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \"" + artigo.getTitulo() + "\" devido a indisponibilidade de horário dos envolvidos. Por favor, insira novas datas e horários na plataforma." + "\n\nObrigado.";
 
+        } else {
+            String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+            String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+            String assunto = "Aguardando confirmação da data - MSA";
+            String mensagem =
+                    "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \"" +
+                    banca.getArtigoAvaliado().getTitulo() +
+                    "\" devido a indisponibilidade de horário dos envolvidos. Por favor, insira novas datas e horários na plataforma."
+                    + "\n\nObrigado.";
+            
             try {
                 emailService.enviarEmail(destinatario, assunto, mensagem);
                 //emailService.enviarEmail(destinatario2, assunto, mensagem);
@@ -215,67 +225,77 @@ public class BancaController {
             } catch (MessagingException e) {
                 System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
             }
+
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
-        }
-    }
-
-    //Não considera avaliação individual - os dados dos avaliadores entra junto
-    @PostMapping("banca/{idArtigo}/avaliacao")
-    public ResponseEntity<String> bancaAvaliaArtigo(@PathVariable Integer idArtigo,
-            @RequestParam("correcao1") Boolean correcao1,
-            @RequestParam("consideracoes1") String consideracoes1,
-            @RequestParam("nota1") Float nota1,
-            @RequestParam("correcao2") Boolean correcao2,
-            @RequestParam("consideracoes2") String consideracoes2,
-            @RequestParam("nota2") Float nota2) { 
-        
-        //Artigo artigo = new Artigo();
-        //artigo = artigoService.findArtigoByid(idArtigo);
-
-        float media = (nota1 + nota2) / 2.0f;
-        artigoService.setarNota(idArtigo, media);
-        
-        StatusBanca status = new StatusBanca();
-
-        if( correcao1 || correcao2 ){
-            // reprovado
-            if (media < 6) {
-                status = statusBancaService.findStatusArtigoById(4);
-            } else {
-                //Aprovado com correcoes
-                status = statusBancaService.findStatusArtigoById(3);
             }
-            
-        } else if( media >= 6){
-            //Aprovado sem correcoes
-            status = statusBancaService.findStatusArtigoById(5);
-        }
-
-        List<Integer> bancas = bancaService.getBancasByArtigoAvaliado(idArtigo);
-        int counter = 1; // Counter variable
-
-        for (Integer bancaId : bancas) {
-        Banca banca = new Banca();
-        banca = bancaService.getBancaById(bancaId);
-        
-        //Status é o mesmo para os dois
-        banca.setStatus(status);
-
-        if (counter == 1) {
-            banca.setNota(nota1);
-            banca.setConsideracoes(consideracoes1);
-
-            dao.save(banca);
-        } else if (counter == 2) {
-            banca.setNota(nota2);
-            banca.setConsideracoes(consideracoes2);
-            dao.save(banca);
-        }
-
-        // Increment the counter
-        counter = (counter % 2) + 1;
-
-      }
-        return ResponseEntity.ok("TFG avaliado com sucesso.");
-    }
+}
+    /*
+     * //Não considera avaliação individual - os dados dos avaliadores entra junto
+     * 
+     * @PostMapping("banca/{idArtigo}/avaliacao")
+     * public ResponseEntity<String> bancaAvaliaArtigo(@PathVariable Integer
+     * idArtigo,
+     * 
+     * @RequestParam("correcao1") Boolean correcao1,
+     * 
+     * @RequestParam("consideracoes1") String consideracoes1,
+     * 
+     * @RequestParam("nota1") Float nota1,
+     * 
+     * @RequestParam("correcao2") Boolean correcao2,
+     * 
+     * @RequestParam("consideracoes2") String consideracoes2,
+     * 
+     * @RequestParam("nota2") Float nota2) {
+     * 
+     * //Artigo artigo = new Artigo();
+     * //artigo = artigoService.findArtigoByid(idArtigo);
+     * 
+     * float media = (nota1 + nota2) / 2.0f;
+     * artigoService.setarNota(idArtigo, media);
+     * 
+     * StatusBanca status = new StatusBanca();
+     * 
+     * if( correcao1 || correcao2 ){
+     * // reprovado
+     * if (media < 6) {
+     * status = statusBancaService.findStatusArtigoById(4);
+     * } else {
+     * //Aprovado com correcoes
+     * status = statusBancaService.findStatusArtigoById(3);
+     * }
+     * 
+     * } else if( media >= 6){
+     * //Aprovado sem correcoes
+     * status = statusBancaService.findStatusArtigoById(5);
+     * }
+     * 
+     * List<Integer> bancas = bancaService.getBancasByArtigoAvaliado(idArtigo);
+     * int counter = 1; // Counter variable
+     * 
+     * for (Integer bancaId : bancas) {
+     * Banca banca = new Banca();
+     * banca = bancaService.getBancaById(bancaId);
+     * 
+     * //Status é o mesmo para os dois
+     * banca.setStatus(status);
+     * 
+     * if (counter == 1) {
+     * banca.setNota(nota1);
+     * banca.setConsideracoes(consideracoes1);
+     * 
+     * dao.save(banca);
+     * } else if (counter == 2) {
+     * banca.setNota(nota2);
+     * banca.setConsideracoes(consideracoes2);
+     * dao.save(banca);
+     * }
+     * 
+     * // Increment the counter
+     * counter = (counter % 2) + 1;
+     * 
+     * }
+     * return ResponseEntity.ok("TFG avaliado com sucesso.");
+     * }
+     */
 }

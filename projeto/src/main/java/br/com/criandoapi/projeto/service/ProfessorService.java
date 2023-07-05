@@ -53,4 +53,22 @@ public class ProfessorService {
         return dao.findById(idProfessor).orElse(null);
     }
 
+    public String getEmailOrientadorByArtigoId(Integer idArtigo) {
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT p.email FROM professor as p JOIN artigo as a ON a.matriculaOrientador = p.matricula WHERE idArtigo = ?")) {
+            statement.setInt(1, idArtigo);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+
+                return resultSet.getString("email");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return null; // Retorna null se o aluno não for encontrado
+    }
+
 }

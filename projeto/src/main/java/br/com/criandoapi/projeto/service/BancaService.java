@@ -22,20 +22,70 @@ import br.com.criandoapi.projeto.model.StatusBanca;
 @Service
 public class BancaService {
     private final IBanca dao;
+    private final ArtigoService artigoService;
+    private final StatusBancaService statusBancaService;
     private final DatabaseConfig databaseConfig;
 
     @Autowired
-    public BancaService(IBanca dao, DatabaseConfig databaseConfig) {
+    public BancaService(IBanca dao, ArtigoService artigoService, StatusBancaService statusBancaService, DatabaseConfig databaseConfig) {
         this.dao = dao;
+        this.artigoService = artigoService;
+        this.statusBancaService = statusBancaService;
         this.databaseConfig = databaseConfig;
     }
 
+    public List<Banca> getBancasPorStatus(Integer status){
+        List<Banca> bancas = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM banca WHERE status = ?")) {
+            statement.setInt(1, status);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Banca banca = new Banca();
+
+                //Artigo artigo = new Artigo();
+                //artigo.setIdArtigo(resultSet.getInt("artigoAvaliado"));
+                //StatusBanca statusBanca = new StatusBanca();
+                //statusBanca.setId(resultSet.getInt("status"));
+
+                Timestamp dataAvaliacao = resultSet.getTimestamp("dataAvaliacao");
+                StatusBanca statusBanca = new StatusBanca();
+                statusBanca = statusBancaService.findStatusBancaById(status);
+        
+                if (dataAvaliacao != null) {
+                    banca.setDataAvaliacao(dataAvaliacao.toLocalDateTime());
+                }
+
+                banca.setIdBanca(resultSet.getInt("idBanca"));
+                banca.setDataRegistro(resultSet.getTimestamp("dataRegistro").toLocalDateTime());
+                banca.setDataAtualizacao(resultSet.getTimestamp("dataAtualizacao").toLocalDateTime());
+                banca.setArtigoAvaliado(artigoService.findArtigoByid(resultSet.getInt("artigoAvaliado")));
+                banca.setStatus(statusBanca);
+        
+
+                bancas.add(banca);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return bancas;
+    }
+
+    public Banca getBancaById(Integer idBanca) {
+        return dao.findById(idBanca).orElse(null);
+    }
+    /*
     public List<Banca> getBancasPorProfessor(String matricula) {
         List<Banca> bancas = new ArrayList<>();
 
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection
-                        .prepareStatement("SELECT * FROM banca WHERE professorAvaliador = ?")) {
+                        .prepareStatement("SELECT * FROM composicaobanca WHERE professorAvaliador = ?")) {
             statement.setString(1, matricula);
             ResultSet resultSet = statement.executeQuery();
 
@@ -70,54 +120,5 @@ public class BancaService {
         }
 
         return bancas;
-    }
-
-    public Banca getBancaById(Integer idBanca) {
-        return dao.findById(idBanca).orElse(null);
-    }
-
-    //Retornar id das bancas que avaliam o mesmo artigo
-    public List<Integer> getBancasByArtigoAvaliado(int artigoAvaliado) {
-    List<Integer> bancasIds = new ArrayList<>();
-
-    try (Connection connection = databaseConfig.getConnection();
-            PreparedStatement statement = connection
-                    .prepareStatement("SELECT idBanca FROM Banca WHERE artigoAvaliado = ?")) {
-        statement.setInt(1, artigoAvaliado);
-        ResultSet resultSet = statement.executeQuery();
-
-        while (resultSet.next()) {
-            int bancaId = resultSet.getInt("idBanca");
-            bancasIds.add(bancaId);
-        }
-    } catch (SQLException e) {
-        e.printStackTrace();
-        // Lidar com exceções, se necessário
-    }
-
-    return bancasIds;
-    }
-
-    //Retornar id da 1ª banca que avaliam o mesmo artigo
-    public Integer getPrimeiraBancaByArtigoAvaliado(int artigoAvaliado) {
-    Integer primeiraBanca = -1;
-
-    try (Connection connection = databaseConfig.getConnection();
-            PreparedStatement statement = connection
-                    .prepareStatement("SELECT MIN(b.idBanca) from banca b JOIN artigo a ON a.idArtigo = b.artigoAvaliado WHERE artigoAvaliado = ?")) {
-        statement.setInt(1, artigoAvaliado);
-        ResultSet resultSet = statement.executeQuery();
-
-        //primeiraBanca = resultSet.getInt("MIN(b.idBanca)");
-        if (resultSet.next()) {
-            primeiraBanca = resultSet.getInt(1);
-        }
-
-    } catch (SQLException e) {
-        e.printStackTrace();
-        // Lidar com exceções, se necessário
-    }
-
-    return primeiraBanca;
-    }
+    }*/
 }

@@ -44,16 +44,18 @@ public class DisponibilidadeController {
     public List<Disponibilidade> listDisponibilidades() {
         return (List<Disponibilidade>) dao.findAll();
     }
-
+ 
     @PostMapping("disponibilidade/banca/{idBanca}")
     public ResponseEntity<String> cadastraDisponibilidade(@PathVariable Integer idBanca,
             @ModelAttribute("idProfessor") String idProfessor,
             @ModelAttribute("data") String dataString,
             @ModelAttribute("horaInicio") String horaInicioString) {
+
         // Obtenha o objeto Banca do banco de dados com base no ID
         Banca banca = bancaService.getBancaById(idBanca);
-
-        if (banca != null) {
+        
+        // Banca liberada para agendar defesa
+        if(banca.getStatus().getId() == 1){
             Disponibilidade disponibilidade = new Disponibilidade();
             disponibilidade.setBanca(banca);
 
@@ -69,13 +71,13 @@ public class DisponibilidadeController {
 
             return ResponseEntity.ok("Disponibilidade cadastrada com sucesso.");
         } else {
-            // Caso a banca não seja encontrada, retorne uma resposta de erro
+            // Caso a banca não esteja autorizada.
             return ResponseEntity.notFound().build();
         }
     }
 
     //SELECT MIN(b.idBanca) from banca b JOIN artigo a ON a.idArtigo = b.artigoAvaliado
-    @PostMapping("disponibilidade/orientador/{idArtigo}/banca")
+    /*@PostMapping("disponibilidade/orientador/{idArtigo}/banca")
     public ResponseEntity<String> cadastraDisponibilidadeOrientador(@PathVariable Integer idArtigo,
             @RequestParam("idProfessor") String idProfessor,
             @RequestParam("data") String dataString,
@@ -103,6 +105,6 @@ public class DisponibilidadeController {
             // Caso a banca não seja encontrada, retorne uma resposta de erro
             return ResponseEntity.notFound().build();
         }
-    }
+    }*/
 
 }

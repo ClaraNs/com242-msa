@@ -26,9 +26,6 @@ public class Banca {
     @Column(name = "dataatualizacao", nullable = false)
     private LocalDateTime dataAtualizacao;
 
-    @ManyToOne
-    @JoinColumn(name = "professoravaliador", referencedColumnName = "matricula", foreignKey = @ForeignKey(name = "fk_banca_professor"))
-    private Professor professorAvaliador;
 
     @Column(name = "dataavaliacao")
     private LocalDateTime dataAvaliacao;
@@ -40,12 +37,6 @@ public class Banca {
     @ManyToOne
     @JoinColumn(name = "status", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_banca_status"))
     private StatusBanca status;
-
-    @Column(name = "nota")
-    private Float nota;
-
-    @Column(name = "consideracoes")
-    private String consideracoes;
 
     // getters and setters
 
@@ -73,14 +64,6 @@ public class Banca {
         this.dataAtualizacao = dataAtualizacao;
     }
 
-    public Professor getProfessorAvaliador() {
-        return professorAvaliador;
-    }
-
-    public void setProfessorAvaliador(Professor professorAvaliador) {
-        this.professorAvaliador = professorAvaliador;
-    }
-
     public LocalDateTime getDataAvaliacao() {
         return dataAvaliacao;
     }
@@ -103,21 +86,5 @@ public class Banca {
 
     public void setStatus(StatusBanca status) {
         this.status = status;
-    }
-
-    public Float getNota() {
-        return nota;
-    }
-
-    public void setNota(Float nota) {
-        this.nota = nota;
-    }
-
-    public String getConsideracoes() {
-        return consideracoes;
-    }
-
-    public void setConsideracoes(String consideracoes) {
-        this.consideracoes = consideracoes;
     }
 }

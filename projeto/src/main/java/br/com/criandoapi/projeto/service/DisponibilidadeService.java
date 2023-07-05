@@ -73,22 +73,46 @@ public class DisponibilidadeService {
         return listaDisponibilidade;
     }
 
-    public LocalDateTime encontrarDataEmComum(List<Disponibilidade> disponibilidadesProfessor1,
-            List<Disponibilidade> disponibilidadesProfessor2,
-            List<Disponibilidade> disponibilidadesProfessor3) {
+    public LocalDateTime encontrarDataEmComum(List<List<Disponibilidade>> todasDisponibilidades) {
+        if (todasDisponibilidades.isEmpty()) {
+            // Caso não haja disponibilidades, retorne null ou faça o tratamento apropriado
+            return null;
+        }
 
+        // Obtenha as disponibilidades do primeiro professor da lista
+        List<Disponibilidade> disponibilidadesProfessor1 = todasDisponibilidades.get(0);
+
+        // Percorra as disponibilidades do primeiro professor
         for (Disponibilidade disponibilidade1 : disponibilidadesProfessor1) {
-            for (Disponibilidade disponibilidade2 : disponibilidadesProfessor2) {
-                for (Disponibilidade disponibilidade3 : disponibilidadesProfessor3) {
-                    LocalDateTime dataHora1 = disponibilidade1.getData();
-                    LocalDateTime dataHora2 = disponibilidade2.getData();
-                    LocalDateTime dataHora3 = disponibilidade3.getData();
+            LocalDateTime dataHora1 = disponibilidade1.getData();
+            boolean isDataEmComum = true;
 
-                    if (dataHora1.equals(dataHora2) && dataHora1.equals(dataHora3)) {
-                        // A data encontrada em comum
-                        return dataHora1;
+            // Verifique se a data é comum a todos os outros professores
+            for (int i = 1; i < todasDisponibilidades.size(); i++) {
+                List<Disponibilidade> disponibilidadesProfessor = todasDisponibilidades.get(i);
+                boolean found = false;
+
+                // Verifique se a data está presente nas disponibilidades do professor atual
+                for (Disponibilidade disponibilidade : disponibilidadesProfessor) {
+                    LocalDateTime dataHora = disponibilidade.getData();
+
+                    if (dataHora.equals(dataHora1)) {
+                        found = true;
+                        break;
                     }
                 }
+
+                // Se a data não foi encontrada nas disponibilidades do professor atual, marque
+                // como não sendo uma data em comum
+                if (!found) {
+                    isDataEmComum = false;
+                    break;
+                }
+            }
+
+            // Se a data é comum a todos os professores, retorne-a
+            if (isDataEmComum) {
+                return dataHora1;
             }
         }
 
