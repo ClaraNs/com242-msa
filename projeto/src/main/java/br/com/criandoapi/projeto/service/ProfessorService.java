@@ -49,6 +49,28 @@ public class ProfessorService {
         return null; // Retorna null se o professor não for encontrado
     }
 
+    public Professor findProfessorByMatricula(String matricula) {
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM professor WHERE matricula = ?")) {
+            statement.setString(1, matricula);
+            ResultSet resultSet = statement.executeQuery();
+            if (resultSet.next()) {
+                Professor professor = new Professor();
+                professor.setMatricula(resultSet.getString("matricula"));
+                professor.setNome(resultSet.getString("nome"));
+                professor.setEmail(resultSet.getString("email"));
+
+                return professor;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return null; // Retorna null se o professor não for encontrado
+    }
+
     public Professor FindProfessorById(String idProfessor) {
         return dao.findById(idProfessor).orElse(null);
     }
