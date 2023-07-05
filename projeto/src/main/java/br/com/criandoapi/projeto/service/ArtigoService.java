@@ -223,6 +223,55 @@ public class ArtigoService {
         return artigos;
     }
 
+    // Retorna os artigo que esperam liberação do orientador
+    public List<Artigo> getArtigosPendentesPorMatriculaOrientador(String matricula) {
+        List<Artigo> artigos = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM artigo WHERE status = 0 OR status = 2 AND matriculaOrientador = ?")) {
+            statement.setString(1, matricula);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Artigo artigo = new Artigo();
+                artigo.setIdArtigo(resultSet.getInt("idArtigo"));
+                artigo.setTitulo(resultSet.getString("titulo"));
+                artigo.setArquivo(resultSet.getBytes("arquivo"));
+                artigo.setUrl(resultSet.getString("url"));
+                artigo.setResumo(resultSet.getString("resumo"));
+                artigo.setDataEnvio(resultSet.getTimestamp("dataEnvio").toLocalDateTime());
+                artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
+
+                // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
+                StatusArtigo status = new StatusArtigo();
+                status.setId(resultSet.getInt("status"));
+                artigo.setStatus(status);
+
+                artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
+                artigo.setConsideracoes(resultSet.getString("consideracoes"));
+
+                // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
+                Aluno aluno = new Aluno();
+                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                artigo.setEnviadoPor(aluno);
+
+                // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
+                // Professor
+                Professor professor = new Professor();
+                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                artigo.setOrientador(professor);
+
+                artigos.add(artigo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return artigos;
+    }
+
     public void setarNota(Integer idArtigo, Float nota) {
         Artigo artigo = new Artigo();
         artigo = findArtigoByid(idArtigo);
@@ -230,4 +279,5 @@ public class ArtigoService {
         dao.save(artigo);
     }
 
+    
 }
