@@ -121,7 +121,7 @@ public class BancaController {
         Artigo artigo = artigoService.findArtigoByid(idArtigo);
 
         // Pronto para banca
-        if (artigo.getStatus().getId() == 2) {
+        if (artigo.getStatus().getId() == 3) {
             Banca banca = new Banca();
 
             StatusBanca status = new StatusBanca();
@@ -159,7 +159,6 @@ public class BancaController {
         }
     }
 
-    //Verificação? 
     // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
     @PostMapping("/banca/{idBanca}/cadastra/avaliacao")
     public String cadastrarAvaliacao(@PathVariable Integer idBanca) {
@@ -180,7 +179,7 @@ public class BancaController {
         banca = bancaService.getBancaById(idBanca);
 
         if (dataAvaliacao != null) {
-    
+
             banca.setDataAvaliacao(dataAvaliacao);
             StatusBanca status = new StatusBanca();
             status = statusBancaService.findStatusBancaById(2);
@@ -196,7 +195,7 @@ public class BancaController {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             String dataFormatada = dataAvaliacao.format(formatter);
             String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
-                     banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
+                    banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
                     dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
             try {
                 emailService.enviarEmail(destinatario, assunto, mensagem);
@@ -210,92 +209,22 @@ public class BancaController {
 
         } else {
             String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
-            String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+            // String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
             String assunto = "Aguardando confirmação da data - MSA";
-            String mensagem =
-                    "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \"" +
+            String mensagem = "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \"" +
                     banca.getArtigoAvaliado().getTitulo() +
                     "\" devido a indisponibilidade de horário dos envolvidos. Por favor, insira novas datas e horários na plataforma."
                     + "\n\nObrigado.";
-            
+
             try {
                 emailService.enviarEmail(destinatario, assunto, mensagem);
-                //emailService.enviarEmail(destinatario2, assunto, mensagem);
+                // emailService.enviarEmail(destinatario2, assunto, mensagem);
                 System.out.println("E-mail enviado com sucesso.");
             } catch (MessagingException e) {
                 System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
             }
 
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
-            }
-}
-    /*
-     * //Não considera avaliação individual - os dados dos avaliadores entra junto
-     * 
-     * @PostMapping("banca/{idArtigo}/avaliacao")
-     * public ResponseEntity<String> bancaAvaliaArtigo(@PathVariable Integer
-     * idArtigo,
-     * 
-     * @RequestParam("correcao1") Boolean correcao1,
-     * 
-     * @RequestParam("consideracoes1") String consideracoes1,
-     * 
-     * @RequestParam("nota1") Float nota1,
-     * 
-     * @RequestParam("correcao2") Boolean correcao2,
-     * 
-     * @RequestParam("consideracoes2") String consideracoes2,
-     * 
-     * @RequestParam("nota2") Float nota2) {
-     * 
-     * //Artigo artigo = new Artigo();
-     * //artigo = artigoService.findArtigoByid(idArtigo);
-     * 
-     * float media = (nota1 + nota2) / 2.0f;
-     * artigoService.setarNota(idArtigo, media);
-     * 
-     * StatusBanca status = new StatusBanca();
-     * 
-     * if( correcao1 || correcao2 ){
-     * // reprovado
-     * if (media < 6) {
-     * status = statusBancaService.findStatusArtigoById(4);
-     * } else {
-     * //Aprovado com correcoes
-     * status = statusBancaService.findStatusArtigoById(3);
-     * }
-     * 
-     * } else if( media >= 6){
-     * //Aprovado sem correcoes
-     * status = statusBancaService.findStatusArtigoById(5);
-     * }
-     * 
-     * List<Integer> bancas = bancaService.getBancasByArtigoAvaliado(idArtigo);
-     * int counter = 1; // Counter variable
-     * 
-     * for (Integer bancaId : bancas) {
-     * Banca banca = new Banca();
-     * banca = bancaService.getBancaById(bancaId);
-     * 
-     * //Status é o mesmo para os dois
-     * banca.setStatus(status);
-     * 
-     * if (counter == 1) {
-     * banca.setNota(nota1);
-     * banca.setConsideracoes(consideracoes1);
-     * 
-     * dao.save(banca);
-     * } else if (counter == 2) {
-     * banca.setNota(nota2);
-     * banca.setConsideracoes(consideracoes2);
-     * dao.save(banca);
-     * }
-     * 
-     * // Increment the counter
-     * counter = (counter % 2) + 1;
-     * 
-     * }
-     * return ResponseEntity.ok("TFG avaliado com sucesso.");
-     * }
-     */
+        }
+    }
 }

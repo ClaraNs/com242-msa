@@ -58,6 +58,7 @@ public class ComposicaoBancaController {
         ComposicaoBanca composicao = new ComposicaoBanca();
         composicao.setBanca(bancaService.getBancaById(idBanca));
         composicao.setProfessorAvaliador(professor);
+        composicao.setNota(-1);
 
         dao.save(composicao);
 
@@ -79,20 +80,25 @@ public class ComposicaoBancaController {
     }
 
     @PostMapping("professor/{matricula}/banca/{idBanca}/cadastrar/avaliacao")
-    public String cadastrarAvaliacao(@PathVariable String matricula,
-        @PathVariable Integer idBanca,
-        @RequestParam("nota") Float nota,
-        @RequestParam("consideracao") String consideracao){
-            ComposicaoBanca composicao = composicaoBancaService.getComposicaoByBancaId(idBanca, matricula);
+    public String cadastrarNota(@PathVariable String matricula,
+            @PathVariable Integer idBanca,
+            @RequestParam("nota") Float nota,
+            @RequestParam("consideracao") String consideracao) {
+        ComposicaoBanca composicao = composicaoBancaService.getComposicaoByBancaId(idBanca, matricula);
+        Banca banca = bancaService.getBancaById(idBanca);
 
-            if(composicao != null){
+        // Banca agendada
+        if (banca.getStatus().getId() == 2) {
+            if (composicao != null) {
                 composicao.setNota(nota);
                 composicao.setConsideracoes(consideracao);
 
                 dao.save(composicao);
                 return "Artigo avaliado com sucesso";
+            } else {
+                return "Erro ao encontrar artigo, favor verificar banca e matrícula.";
             }
-
-            return "Erro ao encontrar artigo, favor verificar banca e matrícula.";
+        }
+        return "TFG ainda não disponível para avaliação.";
     }
 }
