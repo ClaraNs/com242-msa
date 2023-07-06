@@ -117,31 +117,37 @@ FOR EACH ROW
 EXECUTE FUNCTION verificarNotas();
 --
 
-INSERT INTO StatusBanca VALUES(0, 'Aguardando Aprovação');
-INSERT INTO StatusBanca VALUES(1, 'Banca Liberada - Aguardando confirmação de data');
-INSERT INTO StatusBanca VALUES(2, 'Banca Marcada - Data para defesa confirmada');
-INSERT INTO StatusBanca VALUES(3, 'TFG aprovado - Necessita correção');
-INSERT INTO StatusBanca VALUES(4, 'TFG reprovado - Possibilidade de correção');
-INSERT INTO StatusBanca VALUES(5, 'TFG Finalizado - aprovado');
-INSERT INTO StatusBanca VALUES(6, 'TFG Finalizado - reprovado');
-INSERT INTO StatusBanca VALUES(7, 'Aguardando Inserção de Novas Datas');
+INSERT INTO StatusBanca (id, descricao)
+VALUES
+  (0, 'Aguardando Aprovação'),
+  (1, 'Banca Liberada - Aguardando Confirmação de Data'),
+  (2, 'Banca Marcada - Data para Defesa Confirmada'),
+  (3, 'TFG aprovado - Necessita correção'),
+  (4, 'TFG reprovado - Possibilidade de correção'),
+  (5, 'TFG Finalizado - Aprovado'),
+  (6, 'TFG Finalizado - Reprovado'),
+  (7, 'Aguardando Inserção de Novas Datas');
 
-INSERT INTO StatusArtigo VALUES(0, 'Aguardando Aprovação')
-INSERT INTO StatusArtigo VALUES(1, 'Aguardando Realização da Correção proposta');
-INSERT INTO StatusArtigo VALUES(2, 'Aguardando Aprovação arquivo corrigido');
-INSERT INTO StatusArtigo VALUES(3, 'Pronto para avaliação da banca');
-INSERT INTO StatusArtigo VALUES(4, 'Aguardando Realização da Correção proposta Banca');
-INSERT INTO StatusArtigo VALUES(5, 'Aguardando Aprovação das Correções (Banca)');
-INSERT INTO StatusArtigo VALUES(6, 'Artigo Corrigido e aprovado.'); -- aprovado de 1ª
-INSERT INTO StatusArtigo VALUES(7, 'Artigo Reprovado com Possibilidade de Correção');
-INSERT INTO StatusArtigo VALUES(8, 'Artigo Reprovado Corrigido - Aguardando Aprovação');
-INSERT INTO StatusArtigo VALUES(9, 'Artigo Resubmetido para Banca');
-INSERT INTO StatusArtigo VALUES(10, 'Artigo Reprovado.');
+INSERT INTO StatusArtigo (id, descricao)
+VALUES
+  (0, 'Aguardando Aprovação'),
+  (1, 'Aguardando Realização da Correção Proposta'),
+  (2, 'Aguardando Aprovação de Arquivo Corrigido'),
+  (3, 'Pronto para Avaliação da Banca'),
+  (4, 'Aguardando Realização da Correção Proposta (Banca)'),
+  (5, 'Aguardando Aprovação das Correções (Banca)'),
+  (6, 'Artigo Corrigido e Aprovado'),
+  (7, 'Artigo Reprovado com Possibilidade de Correção'),
+  (8, 'Artigo Reprovado Corrigido - Aguardando Aprovação'),
+  (9, 'Artigo Resubmetido para Banca'),
+  (10, 'Artigo Reprovado');
 
 INSERT INTO Aluno (matricula, nome, email)
 VALUES('2020123456', 'Clara', 'anaclarans@live.com');	
 INSERT INTO Aluno (matricula, nome, email)
 VALUES('2020010680', 'Ana', 'anaclarans@unifei.edu.br');
+INSERT INTO Aluno (matricula, nome, email)
+VALUES('2020017410', 'Amanda', 'amandaklein@unifei.edu.br');
 
 INSERT INTO Professor(matricula, nome, email)
 VALUES('6789011111', 'Anna', 'Anna@gmail.com');
@@ -149,6 +155,8 @@ INSERT INTO Professor(matricula, nome, email)
 VALUES('6789022222', 'Luiz', 'Luiz@gmail.com');
 INSERT INTO Professor(matricula, nome, email)
 VALUES('6789033333', 'João', 'anaclarans@live.com');
+INSERT INTO Professor(matricula, nome, email)
+VALUES('2020017411', 'Rafael', 'amandakllein@gmail.com');
 
 
 
