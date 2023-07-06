@@ -38,6 +38,9 @@ public class Banca {
     @JoinColumn(name = "status", referencedColumnName = "id", foreignKey = @ForeignKey(name = "fk_banca_status"))
     private StatusBanca status;
 
+    @Column(name = "correcao", nullable = false, columnDefinition = "boolean default false")
+    private Boolean correcao;
+
     // getters and setters
 
     public Integer getIdBanca() {
@@ -86,5 +89,13 @@ public class Banca {
 
     public void setStatus(StatusBanca status) {
         this.status = status;
+    }
+
+    public Boolean getCorrecao() {
+        return correcao;
+    }
+
+    public void setCorrecao(Boolean correcao) {
+        this.correcao = correcao;
     }
 }

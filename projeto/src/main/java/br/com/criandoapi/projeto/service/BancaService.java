@@ -79,6 +79,13 @@ public class BancaService {
     public Banca getBancaById(Integer idBanca) {
         return dao.findById(idBanca).orElse(null);
     }
+
+    public String AtualizaStatusBanca(Banca banca, StatusBanca novoStatus){
+        banca.setStatus(novoStatus);
+
+        dao.save(banca);
+        return "Status atualizado com sucesso";
+    }
     /*
     public List<Banca> getBancasPorProfessor(String matricula) {
         List<Banca> bancas = new ArrayList<>();

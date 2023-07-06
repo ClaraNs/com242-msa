@@ -117,6 +117,7 @@ public class ArtigoController {
         artigo.setDataEnvio(LocalDateTime.now());
         artigo.setAlteracao(LocalDateTime.now());
         artigo.setStatus(status);
+        artigo.setNotaFinal(-1.f);
         artigo.setEnviadoPor(aluno);
         artigo.setOrientador(professor);
 
@@ -164,6 +165,7 @@ public class ArtigoController {
             status = statusArtigoService.findStatusArtigoById(5);
         } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
             status = statusArtigoService.findStatusArtigoById(8);
+            artigo.setNotaFinal(-1.f);
         }
         
         // Modifica o arquivo, a data da última modificação e o status

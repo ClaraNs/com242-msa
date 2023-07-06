@@ -13,14 +13,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.criandoapi.projeto.DAO.IBanca;
 import br.com.criandoapi.projeto.DAO.IComposicaoBanca;
+import br.com.criandoapi.projeto.model.Artigo;
 import br.com.criandoapi.projeto.model.Banca;
 import br.com.criandoapi.projeto.model.ComposicaoBanca;
 import br.com.criandoapi.projeto.model.Professor;
+import br.com.criandoapi.projeto.model.StatusBanca;
+import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.StatusBancaService;
 
 @RestController
 @CrossOrigin("*")
@@ -28,19 +33,26 @@ import br.com.criandoapi.projeto.service.ProfessorService;
 public class ComposicaoBancaController {
 
     private IComposicaoBanca dao;
+    private IBanca bancaRepository;
     private ProfessorService professorService;
     private BancaService bancaService;
     private EmailService emailService;
     private final ComposicaoBancaService composicaoBancaService;
+    private final ArtigoService artigoService;
+    private final StatusBancaService statusBancaService;
 
     @Autowired
-    public ComposicaoBancaController(IComposicaoBanca dao, ProfessorService professorService,
-            BancaService bancaService, EmailService emailService, ComposicaoBancaService composicaoBancaService) {
+    public ComposicaoBancaController(IComposicaoBanca dao, IBanca bancaRepository, ProfessorService professorService,
+            BancaService bancaService, EmailService emailService, ComposicaoBancaService composicaoBancaService,
+            ArtigoService artigoService, StatusBancaService statusBancaService) {
         this.dao = dao;
+        this.bancaRepository = bancaRepository;
         this.professorService = professorService;
         this.bancaService = bancaService;
         this.emailService = emailService;
         this.composicaoBancaService = composicaoBancaService;
+        this.artigoService = artigoService;
+        this.statusBancaService = statusBancaService;
     }
 
     @GetMapping("/composicao")
@@ -83,6 +95,7 @@ public class ComposicaoBancaController {
     public String cadastrarNota(@PathVariable String matricula,
             @PathVariable Integer idBanca,
             @RequestParam("nota") Float nota,
+            @RequestParam("correcao") Boolean correcao,
             @RequestParam("consideracao") String consideracao) {
         ComposicaoBanca composicao = composicaoBancaService.getComposicaoByBancaId(idBanca, matricula);
         Banca banca = bancaService.getBancaById(idBanca);
@@ -93,7 +106,43 @@ public class ComposicaoBancaController {
                 composicao.setNota(nota);
                 composicao.setConsideracoes(consideracao);
 
+                if(correcao){
+                    banca.setCorrecao(true);
+                }
+
                 dao.save(composicao);
+                Artigo artigo = banca.getArtigoAvaliado();
+                Float notaFinal = artigo.getNotaFinal();
+                
+                Boolean aprovado = false;
+
+                if(notaFinal >= 6)
+                    aprovado = true;
+                
+                // Todos os membros da banca já avaliaram
+                if( notaFinal >= 0){
+                    Integer novoStatus = -1;
+                    Boolean corrigir = banca.getCorrecao();
+
+                    if(banca.getStatus().getId() == 2){// Primeira avaliação do TFG
+                        if(aprovado){ 
+                            if(corrigir)// Aprovado com correções
+                                novoStatus = 3;
+                            else // Aprovado direto
+                                novoStatus = 5;
+                        } else { // reprovado
+                            if(corrigir) //Possibilidade de correção
+                                novoStatus = 4;
+                            else // Reprovado direto
+                                novoStatus = 6;
+                        }
+                    } 
+
+                    StatusBanca status = statusBancaService.findStatusBancaById(novoStatus);
+                    banca.setStatus(status);                    
+                    bancaRepository.save(banca);
+
+                }
                 return "Artigo avaliado com sucesso";
             } else {
                 return "Erro ao encontrar artigo, favor verificar banca e matrícula.";

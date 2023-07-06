@@ -133,6 +133,7 @@ public class BancaController {
             banca.setDataAtualizacao(dia);
             banca.setArtigoAvaliado(artigo);
             banca.setStatus(status);
+            banca.setCorrecao(false);
 
             // Salve as bancas no banco de dados
             dao.save(banca);
@@ -157,6 +158,40 @@ public class BancaController {
         } else {
             return "Erro ao cadastrar as bancas. O Orientador ainda não corrigiu o artigo.";
         }
+    }
+
+    @PostMapping("/banca/{idBanca}/cadastra/avaliacao/{idDisponibilidade}")
+    public String setDataAvaliacao(@PathVariable Integer idBanca,
+            @PathVariable Integer idDisponibilidade) {
+        Disponibilidade dataAvaliacao = disponibilidadeService.getDisponibilidadePorId(idDisponibilidade);
+        Banca banca = new Banca();
+        banca = bancaService.getBancaById(idBanca);
+        banca.setDataAvaliacao(dataAvaliacao.getData());
+        StatusBanca status = new StatusBanca();
+        status = statusBancaService.findStatusBancaById(2);
+        banca.setStatus(status);
+        banca.setDataAtualizacao(LocalDateTime.now());
+
+        dao.save(banca);
+
+        String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+        String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+        // avisar os demais membros da banca
+        String assunto = "Data para defesa confirmada - MSA";
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        String dataFormatada = dataAvaliacao.getData().format(formatter);
+        String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
+                banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
+                dataFormatada + " às " + dataAvaliacao.getData().toLocalTime() + "\n\nObrigado.";
+        try {
+            emailService.enviarEmail(destinatario, assunto, mensagem);
+            emailService.enviarEmail(destinatario2, assunto, mensagem);
+            System.out.println("E-mail enviado com sucesso.");
+        } catch (MessagingException e) {
+            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+        }
+
+        return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
     }
 
     // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
