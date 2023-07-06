@@ -24,6 +24,7 @@ import br.com.criandoapi.projeto.model.Professor;
 import br.com.criandoapi.projeto.model.StatusArtigo;
 import br.com.criandoapi.projeto.service.AlunoService;
 import br.com.criandoapi.projeto.service.ArtigoService;
+import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 import br.com.criandoapi.projeto.service.StatusArtigoService;
@@ -43,11 +44,12 @@ public class ArtigoController {
     private final StatusArtigoService statusArtigoService;
     private final EmailService emailService;
     private final VersaoService versaoService;
+    private final ComposicaoBancaService composicaoBancaService;
 
     @Autowired
     public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService,
             ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService,
-            VersaoService versaoService) {
+            VersaoService versaoService, ComposicaoBancaService composicaoBancaService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
@@ -55,6 +57,7 @@ public class ArtigoController {
         this.statusArtigoService = statusArtigoService;
         this.emailService = emailService;
         this.versaoService = versaoService;
+        this.composicaoBancaService = composicaoBancaService;
     }
 
     @GetMapping("/artigo")
@@ -165,7 +168,9 @@ public class ArtigoController {
             status = statusArtigoService.findStatusArtigoById(5);
         } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
             status = statusArtigoService.findStatusArtigoById(8);
-            artigo.setNotaFinal(-1.f);
+            // Resetar notas
+            artigo.setNotaFinal(-1.f); 
+            composicaoBancaService.resetaNotas(artigoService.getIdBancaByIdArtigo(idArtigo));
         }
         
         // Modifica o arquivo, a data da última modificação e o status

@@ -86,6 +86,12 @@ public class BancaService {
         dao.save(banca);
         return "Status atualizado com sucesso";
     }
+
+    public void setarCorrecaoBanca (Integer idBanca){
+        Banca banca = getBancaById(idBanca);
+        banca.setCorrecao(false);
+        dao.save(banca);
+    }
     /*
     public List<Banca> getBancasPorProfessor(String matricula) {
         List<Banca> bancas = new ArrayList<>();
