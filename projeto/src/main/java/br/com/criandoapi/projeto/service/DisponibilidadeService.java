@@ -35,6 +35,10 @@ public class DisponibilidadeService {
         this.databaseConfig = databaseConfig;
     }
 
+    public Disponibilidade getDisponibilidadePorId(Integer idDisponibilidade){
+        return dao.findById(idDisponibilidade).orElse(null);
+    }
+
     // Recuperar as disponibilidades por professor (retornar uma lista)
     public List<Disponibilidade> getDisponibilidadesPorMatricula(String matricula, Integer idBanca) {
         List<Disponibilidade> listaDisponibilidade = new ArrayList<>();
@@ -50,9 +54,38 @@ public class DisponibilidadeService {
                 Disponibilidade disponibilidade = new Disponibilidade();
                 disponibilidade.setIdDisponibilidade(resultSet.getInt("idDisponibilidade"));
 
-                Professor professor = new Professor();
-                professor = professorService.FindProfessorById(matricula);
-                disponibilidade.setProfessor(professor);
+                Banca banca = new Banca();
+                banca = bancaService.getBancaById(idBanca);
+                disponibilidade.setBanca(banca);
+
+                // Converter os valores de Date para LocalTime
+                Timestamp timestamp = resultSet.getTimestamp("data");
+                LocalDateTime dataHoraInicio = timestamp.toLocalDateTime();
+                disponibilidade.setData(dataHoraInicio);
+
+                listaDisponibilidade.add(disponibilidade);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return listaDisponibilidade;
+    }
+    
+    // Recuperar as disponibilidades por banca
+    public List<Disponibilidade> getDisponibilidadesPorBanca(Integer idBanca) {
+        List<Disponibilidade> listaDisponibilidade = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM disponibilidade WHERE idBanca = ?")) {
+            statement.setInt(1, idBanca);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Disponibilidade disponibilidade = new Disponibilidade();
+                disponibilidade.setIdDisponibilidade(resultSet.getInt("idDisponibilidade"));
 
                 Banca banca = new Banca();
                 banca = bancaService.getBancaById(idBanca);

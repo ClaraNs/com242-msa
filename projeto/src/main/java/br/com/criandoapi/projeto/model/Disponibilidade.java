@@ -19,10 +19,6 @@ public class Disponibilidade {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "iddisponibilidade")
     private Integer idDisponibilidade;
-    
-    @ManyToOne
-    @JoinColumn(name = "professor", referencedColumnName = "matricula", foreignKey = @ForeignKey(name = "fk_disponibilidade_professor"), nullable = false)
-    private Professor professor;
 
     @ManyToOne
     @JoinColumn(name = "idbanca", referencedColumnName = "idBanca", foreignKey = @ForeignKey(name = "fk_disponibilidade_banca"), nullable = false)
@@ -31,6 +27,9 @@ public class Disponibilidade {
     @Column(name = "data", nullable = false)
     private LocalDateTime data;
 
+    @Column(name = "aprovacao", nullable = false, columnDefinition = "boolean default true")
+    private Boolean aprovacao;
+    
     // getters and setters
 
     public Integer getIdDisponibilidade() {
@@ -39,14 +38,6 @@ public class Disponibilidade {
 
     public void setIdDisponibilidade(Integer idDisponibilidade) {
         this.idDisponibilidade = idDisponibilidade;
-    }
-
-    public Professor getProfessor() {
-        return professor;
-    }
-
-    public void setProfessor(Professor professor) {
-        this.professor = professor;
     }
 
     public Banca getBanca() {
@@ -63,5 +54,13 @@ public class Disponibilidade {
 
     public void setData(LocalDateTime data) {
         this.data = data;
+    }
+
+    public Boolean getAprovacao() {
+        return aprovacao;
+    }
+
+    public void setAprovacao(Boolean aprovacao) {
+        this.aprovacao = aprovacao;
     }
 }

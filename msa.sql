@@ -70,15 +70,14 @@ CREATE TABLE ComposicaoBanca (
 
 CREATE TABLE Disponibilidade (
     idDisponibilidade SERIAL PRIMARY KEY,
-    professor VARCHAR(10) NOT NULL,
 	idBanca INT NOT NULL,
 	data TIMESTAMP NOT NULL,
-    FOREIGN KEY (professor)
-		REFERENCES Professor (matricula),
+	aprovacao BOOLEAN DEFAULT true,
     FOREIGN KEY (idBanca)
     	REFERENCES Banca (idBanca)
-);
+); -- adicioanr Booleano que servirá para todos
 
+DROP TABLE Disponibilidade
 -- Trigger
 totalProfessores INT;
   professoresComNota INT;
@@ -122,3 +121,5 @@ AFTER UPDATE OF nota ON ComposicaoBanca
 FOR EACH ROW
 EXECUTE FUNCTION verificarNotas();
 
+SELECT * FROM statusbanca
+SELECT * FROM disponibilidade
