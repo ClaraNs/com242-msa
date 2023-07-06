@@ -98,7 +98,10 @@ public class BancaService {
 
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection
-                        .prepareStatement("SELECT * FROM composicaobanca WHERE professorAvaliador = ?")) {
+                        .prepareStatement("SELECT *\r\n" + //
+                                "FROM Banca AS B\r\n" + //
+                                "JOIN ComposicaoBanca AS CB ON B.idBanca = CB.idBanca\r\n" + //
+                                "WHERE CB.professorAvaliador = ?")) {
             statement.setString(1, matricula);
             ResultSet resultSet = statement.executeQuery();
 
@@ -120,10 +123,8 @@ public class BancaService {
                 banca.setIdBanca(resultSet.getInt("idBanca"));
                 banca.setDataRegistro(resultSet.getTimestamp("dataRegistro").toLocalDateTime());
                 banca.setDataAtualizacao(resultSet.getTimestamp("dataAtualizacao").toLocalDateTime());
-                banca.setProfessorAvaliador(professor);
                 banca.setArtigoAvaliado(artigo);
                 banca.setStatus(status);
-                banca.setNota(resultSet.getFloat("nota"));
 
                 bancas.add(banca);
             }
@@ -133,5 +134,5 @@ public class BancaService {
         }
 
         return bancas;
-    }*/
+    }
 }

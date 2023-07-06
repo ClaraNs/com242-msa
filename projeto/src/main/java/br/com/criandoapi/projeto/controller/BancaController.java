@@ -72,6 +72,12 @@ public class BancaController {
         return bancaService.getBancasPorStatus(0);
     }
 
+    // Bancas por professor, pela matrícula
+    @GetMapping("/banca/{matricula}")
+    public List<Banca> listaBancasPorMatriculaProfessor(@PathVariable String matricula) {
+        return bancaService.getBancasPorProfessor(matricula);
+    }
+
     // Post mudança de status pelo coordenador
     @PostMapping("/banca/aguardandoaprovacao/{idBanca}")
     public String aprovarBanca(@PathVariable Integer idBanca,
