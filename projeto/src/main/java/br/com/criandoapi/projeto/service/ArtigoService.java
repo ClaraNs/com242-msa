@@ -122,6 +122,54 @@ public class ArtigoService {
         return artigos;
     }
 
+    public List<Artigo> getArtigosPorMatriculaAlunoPendente(String matricula) {
+        List<Artigo> artigos = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM artigo WHERE status = 1 OR status = 4 OR status = 7 AND enviadoPor = ?")) {
+            statement.setString(1, matricula);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Artigo artigo = new Artigo();
+                artigo.setIdArtigo(resultSet.getInt("idArtigo"));
+                artigo.setTitulo(resultSet.getString("titulo"));
+                artigo.setArquivo(resultSet.getBytes("arquivo"));
+                artigo.setUrl(resultSet.getString("url"));
+                artigo.setResumo(resultSet.getString("resumo"));
+                artigo.setDataEnvio(resultSet.getTimestamp("dataEnvio").toLocalDateTime());
+                artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
+
+                // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
+                StatusArtigo status = new StatusArtigo();
+                status.setId(resultSet.getInt("status"));
+                artigo.setStatus(status);
+
+                artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
+                artigo.setConsideracoes(resultSet.getString("consideracoes"));
+
+                // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
+                Aluno aluno = new Aluno();
+                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                artigo.setEnviadoPor(aluno);
+
+                // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
+                // Professor
+                Professor professor = new Professor();
+                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                artigo.setOrientador(professor);
+
+                artigos.add(artigo);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return artigos;
+    }
+
     public List<Artigo> getArtigosPorMatriculaOrientador(String matricula) {
         List<Artigo> artigos = new ArrayList<>();
 
@@ -229,7 +277,7 @@ public class ArtigoService {
 
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection
-                        .prepareStatement("SELECT * FROM artigo WHERE status = 0 OR status = 2 AND matriculaOrientador = ?")) {
+                        .prepareStatement("SELECT * FROM artigo WHERE status IN (0, 2, 5, 8) AND matriculaOrientador = ?")) {
             statement.setString(1, matricula);
             ResultSet resultSet = statement.executeQuery();
 

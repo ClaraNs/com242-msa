@@ -63,6 +63,13 @@ public class ArtigoController {
         return artigoService.getArtigosPorMatriculaAluno(matricula);
     }
 
+    // Lista artigos que o aluno necessita realizar alguma correção
+    @GetMapping("/aluno/{matricula}/artigosagurdandocorrecao")
+    public List<Artigo> listaArtigosAlunoPendentes(@PathVariable String matricula) {
+        return artigoService.getArtigosPorMatriculaAlunoPendente(matricula);
+    }
+
+    // Lista artigos por aluno
     @GetMapping("/orientador/{matricula}/artigos")
     public List<Artigo> listaArtigosOrientador(@PathVariable String matricula) {
         return artigoService.getArtigosPorMatriculaOrientador(matricula);
@@ -130,24 +137,91 @@ public class ArtigoController {
         return novoArtigo;
     }
 
-     @PostMapping("artigo/{idArtigo}/avaliacao")
+    // Reenvia artigo com correção e seta estado correspondente
+    @PostMapping("/artigo/{idArtigo}/reenviar")
+    public Artigo uploadFile(@PathVariable Integer idArtigo,
+            @RequestParam("pdfFile") MultipartFile file) throws IOException {
+        byte[] arquivoBytes = file.getBytes();
+        
+        // Encontra o artigo
+        Artigo artigo = artigoService.findArtigoByid(idArtigo);
+        StatusArtigo statusAtual = artigo.getStatus();
+        Integer idAtual = statusAtual.getId();
+        System.out.println(idAtual);
+
+        StatusArtigo status = new StatusArtigo();
+        
+        // Corrigindo pela primeira vez
+        if( idAtual == 1)
+            status = statusArtigoService.findStatusArtigoById(2); //Aguardando correção
+        else if(idAtual == 4){// Corrigindo o que a banca sugeriu (aprovado)
+            status = statusArtigoService.findStatusArtigoById(5);
+        } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
+            status = statusArtigoService.findStatusArtigoById(8);
+        }
+        
+        // Modifica o arquivo, a data da última modificação e o status
+        artigo.setArquivo(arquivoBytes);
+        artigo.setAlteracao(LocalDateTime.now());
+        artigo.setStatus(status);
+        artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
+
+        // Salva alterações
+        dao.save(artigo);
+
+        String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+        String assunto = "Artigo Modificado - MSA";
+        String mensagem = "Prezado aluno,\n\n\tUm novo arquivo do artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
+
+        try {
+            emailService.enviarEmail(destinatario, assunto, mensagem);
+            System.out.println("E-mail enviado com sucesso.");
+        } catch (MessagingException e) {
+            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+        }
+
+        return artigo;
+    }
+
+    // Seta o status do artigo para o correspondente a partir da correção do orientador
+    @PostMapping("artigo/{idArtigo}/avaliacao")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
             @RequestParam("correcao") Boolean correcao,
             @RequestParam("consideracoes") String consideracoes) {
         // Obtenha o objeto Artigo do banco de dados com base no ID
         Artigo artigo = new Artigo();
         artigo = dao.findById(idArtigo).orElse(null);
-        Integer idStatus = 3; // Não precisa mais de correções
+        
 
         if (artigo != null) {
+            Integer statusAtual = artigo.getStatus().getId();
+            Integer novoStatus = -1;
+
             // Atualize o status e as considerações do artigo
             // Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
 
             if(correcao){
-                idStatus = 1;
+                if(statusAtual == 0) // Primeiro envio
+                    novoStatus = 1;
+                else if(statusAtual == 2) // Ainda possui correções a serem feitas
+                    novoStatus = 1; 
+                else if(statusAtual == 5) //Correções sugeridas pela banca e ainda falta correções
+                    novoStatus = 4;
+                else if(statusAtual == 8) // Reprovado, com possibilidade de correção, mas falta alterações
+                    novoStatus = 7;
+            } else {
+                if(statusAtual == 0) // Primeiro envio
+                    novoStatus = 3;
+                else if(statusAtual == 2) // Pronto para banca
+                    novoStatus = 3; 
+                else if(statusAtual == 5) // Correções sugeridas pela banca feitas com sucesso
+                    novoStatus = 6;
+                else if(statusAtual == 8) // Reprovado, com possibilidade de recuperação, pronto para reavaliação
+                    novoStatus = 9;
             }
-            status = statusArtigoService.findStatusArtigoById(idStatus);
+
+            status = statusArtigoService.findStatusArtigoById(novoStatus);
             artigo.setStatus(status);
             artigo.setConsideracoes(consideracoes);
             artigo.setAlteracao(LocalDateTime.now());
@@ -159,9 +233,9 @@ public class ArtigoController {
             String assunto = "Mudança no Status do Artigo - MSA";
             String mensagem = "";
 
-            if(idStatus == 1){
+            if(novoStatus == 1){
                 mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador. Por favor, verifique as correções e faça as devidas alterações.\n\nObrigado.";
-            } else if(idStatus == 3){
+            } else if(novoStatus == 3){
                 mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
             }
   
@@ -180,6 +254,7 @@ public class ArtigoController {
         }
     }
 
+    // Link de download
     @GetMapping("artigo/{idArtigo}/download")
     public ResponseEntity<byte[]> downloadFile(@PathVariable Integer idArtigo) {
         // Obtenha o objeto Artigo do banco de dados com base no ID

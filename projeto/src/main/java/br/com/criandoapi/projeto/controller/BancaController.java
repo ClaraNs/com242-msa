@@ -66,7 +66,7 @@ public class BancaController {
         return (List<Banca>) dao.findAll();
     }
 
-    // Bancas aguardando solicitação
+    // Bancas aguardando aprovação do coordenador
     @GetMapping("/banca/aguardandoaprovacao")
     public List<Banca> listaBancasPendentes() {
         return bancaService.getBancasPorStatus(0);

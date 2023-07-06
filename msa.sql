@@ -72,7 +72,7 @@ CREATE TABLE Disponibilidade (
     idDisponibilidade SERIAL PRIMARY KEY,
 	idBanca INT NOT NULL,
 	data TIMESTAMP NOT NULL,
-	aprovacao BOOLEAN DEFAULT true,
+	aprovacao BOOLEAN DEFAULT true NOT NULL,
     FOREIGN KEY (idBanca)
     	REFERENCES Banca (idBanca)
 ); -- adicioanr Booleano que servirá para todos
@@ -115,11 +115,43 @@ END;
 $$
 LANGUAGE plpgsql;
 
+--
+
+INSERT INTO StatusBanca VALUES(0, 'Aguardando Aprovação');
+INSERT INTO StatusBanca VALUES(1, 'Banca Liberada - Aguardando confirmação de data');
+INSERT INTO StatusBanca VALUES(2, 'Banca Marcada - Data para defesa confirmada');
+INSERT INTO StatusBanca VALUES(3, 'TFG aprovado - Necessita correção');
+INSERT INTO StatusBanca VALUES(4, 'TFG reprovado - Possibilidade de correção');
+INSERT INTO StatusBanca VALUES(5, 'TFG Finalizado - aprovado');
+INSERT INTO StatusBanca VALUES(6, 'TFG Finalizado - reprovado');
+
+INSERT INTO StatusArtigo VALUES(0, 'Aguardando Aprovação')
+INSERT INTO StatusArtigo VALUES(1, 'Aguardando Realização da Correção proposta');
+INSERT INTO StatusArtigo VALUES(2, 'Aguardando Aprovação arquivo corrigido');
+INSERT INTO StatusArtigo VALUES(3, 'Pronto para avaliação da banca');
+INSERT INTO StatusArtigo VALUES(4, 'Aguardando Realização da Correção proposta Banca');
+INSERT INTO StatusArtigo VALUES(5, 'Aguardando Aprovação das Correções (Banca)');
+INSERT INTO StatusArtigo VALUES(6, 'Artigo Corrigido e aprovado.'); -- aprovado de 1ª
+INSERT INTO StatusArtigo VALUES(7, 'Artigo Reprovado com Possibilidade de Correção');
+INSERT INTO StatusArtigo VALUES(8, 'Artigo Reprovado Corrigido - Aguardando Aprovação');
+INSERT INTO StatusArtigo VALUES(9, 'Artigo Resubmetido para Banca');
+INSERT INTO StatusArtigo VALUES(10, 'Artigo Reprovado.');
+
 -- Cria a trigger para inserção na tabela ComposicaoBanca
 CREATE TRIGGER verificarNotasTrigger
 AFTER UPDATE OF nota ON ComposicaoBanca
 FOR EACH ROW
 EXECUTE FUNCTION verificarNotas();
-
+DELETE FROM disponibilidade
+SELECT * FROM artigo where idartigo = 2
+SELECT * FROM statusartigo
 SELECT * FROM statusbanca
-SELECT * FROM disponibilidade
+
+DELETE FROM disponibilidade
+DELETE FROM composicaobanca
+DELETE FROM banca
+DELETE FROM artigo
+DELETE FROM professor
+DELETE FROM Aluno
+DELETE FROM statusartigo
+DELETE FROM statusbanca
