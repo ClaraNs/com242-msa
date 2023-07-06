@@ -23,11 +23,18 @@ public class ArtigoService {
 
     private final IArtigo dao;
     private final DatabaseConfig databaseConfig;
+    private final AlunoService alunoService;
+    private final StatusArtigoService statusArtigoService;
+    private final ProfessorService professorService;
 
     @Autowired
-    public ArtigoService(IArtigo dao, DatabaseConfig databaseConfig) {
+    public ArtigoService(IArtigo dao, DatabaseConfig databaseConfig, AlunoService alunoService, StatusArtigoService statusArtigoService,
+    ProfessorService professorService) {
         this.dao = dao;
         this.databaseConfig = databaseConfig;
+        this.alunoService = alunoService;
+        this.statusArtigoService = statusArtigoService;
+        this.professorService = professorService;
     }
 
     public Artigo findArtigoByid(Integer idartigo) {
@@ -46,22 +53,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
 
                 artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
                 // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
                 // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
                 // Professor
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 return artigo;
@@ -94,22 +98,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
 
                 artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
                 // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
                 // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
                 // Professor
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 artigos.add(artigo);
@@ -142,22 +143,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
 
                 artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
                 // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
                 // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
                 // Professor
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 artigos.add(artigo);
@@ -190,22 +188,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
 
                 artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
                 // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
                 // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
                 // Professor
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 artigos.add(artigo);
@@ -242,21 +237,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
+                
                 Float nota = resultSet.getFloat("notaFinal");
                 if (nota != null)
                     artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
 
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 artigos.add(artigo);
@@ -292,22 +285,19 @@ public class ArtigoService {
                 artigo.setAlteracao(resultSet.getTimestamp("alteracao").toLocalDateTime());
 
                 // Corrigir a definição do campo "status" usando um objeto do tipo StatusArtigo
-                StatusArtigo status = new StatusArtigo();
-                status.setId(resultSet.getInt("status"));
+                StatusArtigo status = statusArtigoService.findStatusArtigoById(resultSet.getInt("status"));
                 artigo.setStatus(status);
 
                 artigo.setNotaFinal(resultSet.getFloat("notaFinal"));
                 artigo.setConsideracoes(resultSet.getString("consideracoes"));
 
                 // Corrigir a definição do campo "enviadoPor" usando um objeto do tipo Aluno
-                Aluno aluno = new Aluno();
-                aluno.setMatricula(resultSet.getString("enviadoPor"));
+                Aluno aluno = alunoService.findAlunoByMatricula(resultSet.getString("enviadoPor"));
                 artigo.setEnviadoPor(aluno);
 
                 // Corrigir a definição do campo "matriculaOrientador" usando um objeto do tipo
                 // Professor
-                Professor professor = new Professor();
-                professor.setMatricula(resultSet.getString("matriculaOrientador"));
+                Professor professor = professorService.findProfessorByMatricula(resultSet.getString("matriculaOrientador"));
                 artigo.setOrientador(professor);
 
                 artigos.add(artigo);
