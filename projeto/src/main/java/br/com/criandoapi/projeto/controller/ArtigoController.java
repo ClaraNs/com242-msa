@@ -127,7 +127,7 @@ public class ArtigoController {
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         novoArtigo = dao.save(artigo);
 
-        this.versaoService.criaVersao(novoArtigo);
+        versaoService.criaVersao(novoArtigo);
 
         String destinatario = aluno.getEmail();
         String assunto = "Artigo Submetido - MSA";
@@ -143,7 +143,55 @@ public class ArtigoController {
         return novoArtigo;
     }
 
-     @PostMapping("artigo/{idArtigo}/avaliacao")
+    // Reenvia artigo com correção e seta estado correspondente
+    @PostMapping("/artigo/{idArtigo}/reenviar")
+    public Artigo uploadFile(@PathVariable Integer idArtigo,
+            @RequestParam("pdfFile") MultipartFile file) throws IOException {
+        byte[] arquivoBytes = file.getBytes();
+        
+        // Encontra o artigo
+        Artigo artigo = artigoService.findArtigoByid(idArtigo);
+        StatusArtigo statusAtual = artigo.getStatus();
+        Integer idAtual = statusAtual.getId();
+        System.out.println(statusAtual);
+
+        StatusArtigo status = new StatusArtigo();
+        
+        // Corrigindo pela primeira vez
+        if( idAtual == 1)
+            status = statusArtigoService.findStatusArtigoById(2); //Aguardando correção
+        else if(idAtual == 4){// Corrigindo o que a banca sugeriu (aprovado)
+            status = statusArtigoService.findStatusArtigoById(5);
+        } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
+            status = statusArtigoService.findStatusArtigoById(8);
+        }
+        
+        // Modifica o arquivo, a data da última modificação e o status
+        artigo.setArquivo(arquivoBytes);
+        artigo.setAlteracao(LocalDateTime.now());
+        artigo.setStatus(status);
+        artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
+
+        // Salva alterações
+        Artigo novoArtigo = dao.save(artigo);
+        versaoService.criaVersao(novoArtigo);
+
+        String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+        String assunto = "Artigo Modificado - MSA";
+        String mensagem = "Prezado aluno,\n\n\tUm novo arquivo do artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
+
+        try {
+            emailService.enviarEmail(destinatario, assunto, mensagem);
+            System.out.println("E-mail enviado com sucesso.");
+        } catch (MessagingException e) {
+            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+        }
+
+        return artigo;
+    }
+
+    // Professor orientador avalia o artigo
+    @PostMapping("artigo/{idArtigo}/avaliacao")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,
             @RequestParam("correcao") Boolean correcao,
             @RequestParam("consideracoes") String consideracoes) {

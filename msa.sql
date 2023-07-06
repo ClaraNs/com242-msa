@@ -77,12 +77,7 @@ CREATE TABLE Disponibilidade (
     	REFERENCES Banca (idBanca)
 ); -- adicioanr Booleano que servirá para todos
 
-DROP TABLE Disponibilidade
 -- Trigger
-totalProfessores INT;
-  professoresComNota INT;
-  novaNota FLOAT;
-  artigoId INT;
 CREATE OR REPLACE FUNCTION verificarNotas()
   RETURNS TRIGGER AS
 $$
@@ -95,7 +90,7 @@ BEGIN
   -- Obtém o total de professores da banca
   SELECT COUNT(idComposicao) INTO totalProfessores FROM ComposicaoBanca WHERE idBanca = NEW.idBanca;
 
-  -- Obtém o total de notas positivas lançadas na banca
+  -- Obtém o total de notas válidas lançadas na banca
   SELECT COUNT(*) INTO notasPositivas FROM ComposicaoBanca WHERE idBanca = NEW.idBanca AND nota > 0;
 
   -- Verifica se o número de professores é igual ao número de notas positivas
@@ -142,7 +137,8 @@ CREATE TRIGGER verificarNotasTrigger
 AFTER UPDATE OF nota ON ComposicaoBanca
 FOR EACH ROW
 EXECUTE FUNCTION verificarNotas();
-DELETE FROM disponibilidade
+
+/*DELETE FROM disponibilidade
 SELECT * FROM artigo where idartigo = 2
 SELECT * FROM statusartigo
 SELECT * FROM statusbanca
@@ -155,3 +151,6 @@ DELETE FROM professor
 DELETE FROM Aluno
 DELETE FROM statusartigo
 DELETE FROM statusbanca
+SELECT * FROM artigo WHERE status IN (0, 2, 5, 8) AND matriculaOrientador = '6789033333'
+SELECT * FROM artigo
+UPDATE artigo SET status = 7*/
