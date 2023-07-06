@@ -3,6 +3,7 @@ package br.com.criandoapi.projeto.controller;
 import java.util.List;
 
 import javax.mail.MessagingException;
+import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -99,9 +100,9 @@ public class ComposicaoBancaController {
             @RequestParam("consideracao") String consideracao) {
         ComposicaoBanca composicao = composicaoBancaService.getComposicaoByBancaId(idBanca, matricula);
         Banca banca = bancaService.getBancaById(idBanca);
-
+        StatusBanca statusAtual = banca.getStatus();
         // Banca agendada
-        if (banca.getStatus().getId() == 2) {
+        if (statusAtual.getId() == 2 || statusAtual.getId() == 4) {
             if (composicao != null) {
                 composicao.setNota(nota);
                 composicao.setConsideracoes(consideracao);
@@ -111,39 +112,67 @@ public class ComposicaoBancaController {
                 }
 
                 dao.save(composicao);
-                Artigo artigo = banca.getArtigoAvaliado();
-                Float notaFinal = artigo.getNotaFinal();
+
+                Integer idArtigo = banca.getArtigoAvaliado().getIdArtigo();
                 
+                Float notaFinal = artigoService.getNotaByIdArtigo(idArtigo);
+                System.out.println(notaFinal);
                 Boolean aprovado = false;
 
-                if(notaFinal >= 6)
+                if(notaFinal >= 6.f)
                     aprovado = true;
                 
                 // Todos os membros da banca já avaliaram
-                if( notaFinal >= 0){
+                if( notaFinal >= 0.f){
                     Integer novoStatus = -1;
                     Boolean corrigir = banca.getCorrecao();
 
                     if(banca.getStatus().getId() == 2){// Primeira avaliação do TFG
-                        if(aprovado){ 
-                            if(corrigir)// Aprovado com correções
-                                novoStatus = 3;
-                            else // Aprovado direto
+                        if(aprovado){
+                            if(correcao){// Aprovado com correções
+                            artigoService.mudarStatusArtigo(idArtigo, 4);
+                            novoStatus = 3;
+                            } else { // Aprovado direto
                                 novoStatus = 5;
-                        } else { // reprovado
-                            if(corrigir) //Possibilidade de correção
+                                artigoService.mudarStatusArtigo(idArtigo, 6);
+                            } 
+                        } else{ //Reprovado
+                            System.out.println("ELE FOI REPROVADO");
+                            if(corrigir){ //Possibilidade de correção
+                                System.out.println("Novo status = " + novoStatus);
+                                System.out.println("PODE CORRIGIR");
                                 novoStatus = 4;
-                            else // Reprovado direto
+                                artigoService.mudarStatusArtigo(idArtigo, 7);
+                            } else{ // Reprovado direto 
+                                System.out.println("JÁ ERA");
                                 novoStatus = 6;
+                                artigoService.mudarStatusArtigo(idArtigo, 10);
+                            }
+                        }  
+                    } else if(banca.getStatus().getId() == 4){ // Segunda avaliação
+                        if(aprovado){
+                            if(correcao){// Aprovado com correções
+                            artigoService.mudarStatusArtigo(idArtigo, 4);
+                            novoStatus = 3;
+                            } else { // Aprovado direto
+                                novoStatus = 5;
+                                artigoService.mudarStatusArtigo(idArtigo, 6);
+                            } 
+                        } else{ // Reprovado sem mais chances
+                            System.out.println("JÁ ERA");
+                            novoStatus = 6;
+                            artigoService.mudarStatusArtigo(idArtigo, 10);
                         }
-                    } 
-
+                    }
+                        
+                    System.out.println("Novo status = " + novoStatus);
                     StatusBanca status = statusBancaService.findStatusBancaById(novoStatus);
                     banca.setStatus(status);                    
                     bancaRepository.save(banca);
 
+                    return "Todos os membros já avaliariam, novo status da banca = " + novoStatus;
                 }
-                return "Artigo avaliado com sucesso";
+                return "Artigo avaliado com sucesso" + " nota final agora está " + notaFinal;
             } else {
                 return "Erro ao encontrar artigo, favor verificar banca e matrícula.";
             }

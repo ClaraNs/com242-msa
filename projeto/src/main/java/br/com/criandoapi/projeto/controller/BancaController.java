@@ -73,10 +73,10 @@ public class BancaController {
     }
 
     // Bancas por professor, pela matrícula
-    @GetMapping("/banca/{matricula}")
+    /*@GetMapping("/banca/{matricula}")
     public List<Banca> listaBancasPorMatriculaProfessor(@PathVariable String matricula) {
         return bancaService.getBancasPorProfessor(matricula);
-    }
+    }*/
 
     // Post mudança de status pelo coordenador
     @PostMapping("/banca/aguardandoaprovacao/{idBanca}")
@@ -201,7 +201,7 @@ public class BancaController {
     }
 
     // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
-    @PostMapping("/banca/{idBanca}/cadastra/avaliacao")
+    /*@PostMapping("/banca/{idBanca}/cadastra/avaliacao")
     public String cadastrarAvaliacao(@PathVariable Integer idBanca) {
         List<List<Disponibilidade>> todasDisponibilidades = new ArrayList<>();
         List<Professor> professores = composicaoBancaService.professoresByBancaId(idBanca);
@@ -267,5 +267,5 @@ public class BancaController {
 
             return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
         }
-    }
+    }*/
 }

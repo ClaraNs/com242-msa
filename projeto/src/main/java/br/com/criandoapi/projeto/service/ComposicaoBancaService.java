@@ -147,29 +147,42 @@ public class ComposicaoBancaService {
 
         return composicoes;
     }
-    
-    public Float getNotasByBanca(List<ComposicaoBanca> composicoes) {
-    boolean todasNotasNaoNulas = true;
-    float somaNotas = 0;
-    int contadorNotas = 0;
 
-    for (ComposicaoBanca composicao : composicoes) {
-        Float nota = composicao.getNota();
-        if (nota == null || nota == 0) {
-            todasNotasNaoNulas = false;
-            break;
+    public String resetaNotas(Integer idBanca) {
+        List<ComposicaoBanca> lista = new ArrayList<>();
+        lista = getComposicoesByBancaId(idBanca);
+
+        for (ComposicaoBanca composicao : lista) {
+            composicao.setNota(-1.f);
+            System.out.println(composicao.getIdComposicao() + "está sendo setado");
+            dao.save(composicao);
+        }
+
+        bancaService.setarCorrecaoBanca(idBanca);
+        return "Notas resetadas";
+    }
+
+    public Float getNotasByBanca(List<ComposicaoBanca> composicoes) {
+        boolean todasNotasNaoNulas = true;
+        float somaNotas = 0;
+        int contadorNotas = 0;
+
+        for (ComposicaoBanca composicao : composicoes) {
+            Float nota = composicao.getNota();
+            if (nota == null || nota == 0) {
+                todasNotasNaoNulas = false;
+                break;
+            } else {
+                somaNotas += nota;
+                contadorNotas++;
+            }
+        }
+
+        if (todasNotasNaoNulas && contadorNotas > 0) {
+            return somaNotas / contadorNotas;
         } else {
-            somaNotas += nota;
-            contadorNotas++;
+            return null;
         }
     }
-
-    if (todasNotasNaoNulas && contadorNotas > 0) {
-        return somaNotas / contadorNotas;
-    } else {
-        return null;
-    }
-}
-
 
 }

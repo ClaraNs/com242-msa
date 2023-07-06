@@ -110,6 +110,11 @@ END;
 $$
 LANGUAGE plpgsql;
 
+-- Cria a trigger para inserção na tabela ComposicaoBanca
+CREATE TRIGGER verificarNotasTrigger
+AFTER INSERT OR UPDATE OF nota ON ComposicaoBanca
+FOR EACH ROW
+EXECUTE FUNCTION verificarNotas();
 --
 
 INSERT INTO StatusBanca VALUES(0, 'Aguardando Aprovação');
@@ -131,18 +136,37 @@ INSERT INTO StatusArtigo VALUES(7, 'Artigo Reprovado com Possibilidade de Corre�
 INSERT INTO StatusArtigo VALUES(8, 'Artigo Reprovado Corrigido - Aguardando Aprovação');
 INSERT INTO StatusArtigo VALUES(9, 'Artigo Resubmetido para Banca');
 INSERT INTO StatusArtigo VALUES(10, 'Artigo Reprovado.');
+INSERT INTO Aluno (matricula, nome, email)
+VALUES('2020123456', 'Clara', 'anaclarans@live.com');	
+INSERT INTO Aluno (matricula, nome, email)
+VALUES('2020010680', 'Ana', 'anaclarans@unifei.edu.br');
 
--- Cria a trigger para inserção na tabela ComposicaoBanca
-CREATE TRIGGER verificarNotasTrigger
-AFTER UPDATE OF nota ON ComposicaoBanca
-FOR EACH ROW
-EXECUTE FUNCTION verificarNotas();
+INSERT INTO Professor(matricula, nome, email)
+VALUES('6789011111', 'Anna', 'Anna@gmail.com');
+INSERT INTO Professor(matricula, nome, email)
+VALUES('6789022222', 'Luiz', 'Luiz@gmail.com');
+INSERT INTO Professor(matricula, nome, email)
+VALUES('6789033333', 'João', 'anaclarans@live.com');
 
+
+
+SELECT COUNT(idComposicao) FROM ComposicaoBanca
+SELECT COUNT(*) FROM ComposicaoBanca WHERE nota > 0;
+ 
+SELECT a.status, a.notafinal, b.status FROM ARTIGO a JOIN banca b ON b.artigoavaliado = a.idartigo
+SELECT * FROM artigo
+SELECT * FROM BANCA
+SELECT * FROM composicaoBanca
+UPDATE BANCA SET STATUS = 4
+UPDATE artigo SET STATUS = 7
+UPDATE artigo SET notafinal = -1
+UPDATE composicaobanca SET nota = -1
 /*DELETE FROM disponibilidade
 SELECT * FROM artigo where idartigo = 2
 SELECT * FROM statusartigo
 SELECT * FROM statusbanca
 
+DELETE FROM VERSAO
 DELETE FROM disponibilidade
 DELETE FROM composicaobanca
 DELETE FROM banca
