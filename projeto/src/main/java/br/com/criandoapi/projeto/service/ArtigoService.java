@@ -317,5 +317,38 @@ public class ArtigoService {
         dao.save(artigo);
     }
 
+    public void mudarStatusArtigo(Integer idArtigo, Integer idStatus){
+        Artigo artigo = findArtigoByid(idArtigo);
+        StatusArtigo status = statusArtigoService.findStatusArtigoById(idStatus);
+
+        artigo.setStatus(status);
+        dao.save(artigo);
+    }
+
+    public Float getNotaByIdArtigo(Integer idArtigo){
+        Artigo artigo = findArtigoByid(idArtigo);
+
+        return artigo.getNotaFinal();
+    }
+
+    public Integer getIdBancaByIdArtigo(Integer idArtigo){
+        Integer idBanca = -1;
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT idbanca FROM banca WHERE artigoavaliado = ?")) {
+            statement.setInt(1, idArtigo);
+            ResultSet resultSet = statement.executeQuery();
+            idBanca = resultSet.getInt("idbanca");
+           
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return idBanca;
+    }
+
+
     
 }
