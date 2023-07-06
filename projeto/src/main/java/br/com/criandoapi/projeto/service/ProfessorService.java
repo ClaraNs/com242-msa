@@ -60,6 +60,7 @@ public class ProfessorService {
                 professor.setMatricula(resultSet.getString("matricula"));
                 professor.setNome(resultSet.getString("nome"));
                 professor.setEmail(resultSet.getString("email"));
+                professor.setCoordenador(resultSet.getBoolean("coordenador"));
 
                 return professor;
             }
