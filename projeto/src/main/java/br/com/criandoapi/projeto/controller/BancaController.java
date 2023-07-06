@@ -80,10 +80,13 @@ public class BancaController {
     }
 
     // Bancas por professor, pela matrícula
-    /*@GetMapping("/banca/{matricula}")
-    public List<Banca> listaBancasPorMatriculaProfessor(@PathVariable String matricula) {
-        return bancaService.getBancasPorProfessor(matricula);
-    }*/
+    /*
+     * @GetMapping("/banca/{matricula}")
+     * public List<Banca> listaBancasPorMatriculaProfessor(@PathVariable String
+     * matricula) {
+     * return bancaService.getBancasPorProfessor(matricula);
+     * }
+     */
 
     // Post mudança de status pelo coordenador
     @PostMapping("/banca/aguardandoaprovacao/{idBanca}")
@@ -117,12 +120,10 @@ public class BancaController {
         return "Banca ainda aguardando aprovação";
     }
 
-    /*
-     * @GetMapping("/professor/{matricula}/bancas")
-     * public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
-     * return bancaService.getBancasPorProfessor(matricula);
-     * }
-     */
+    @GetMapping("/professor/{matricula}/bancas")
+    public List<Banca> listaBancasPorProfessor(@PathVariable String matricula) {
+        return bancaService.getBancasPorProfessor(matricula);
+    }
 
     @PostMapping("/artigo/{idArtigo}/banca/cadastro")
     public String solicitarBanca(@PathVariable Integer idArtigo) {
@@ -186,7 +187,7 @@ public class BancaController {
         String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
                 banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
                 dataFormatada + " às " + dataAvaliacao.getData().toLocalTime() + "\n\nObrigado.";
-        
+
         requisicaoService.realizaRequisicao(email, assunto, mensagem);
         requisicaoService.realizaRequisicao(email2, assunto, mensagem);
 
@@ -194,71 +195,83 @@ public class BancaController {
     }
 
     // Verificar se existe alguma data que coincide, se sim, marca a avaliacao
-    /*@PostMapping("/banca/{idBanca}/cadastra/avaliacao")
-    public String cadastrarAvaliacao(@PathVariable Integer idBanca) {
-        List<List<Disponibilidade>> todasDisponibilidades = new ArrayList<>();
-        List<Professor> professores = composicaoBancaService.professoresByBancaId(idBanca);
-
-        // Para cada professor, obtenha suas disponibilidades e adicione na lista de
-        // listas
-        for (Professor professor : professores) {
-            String matricula = professor.getMatricula();
-            List<Disponibilidade> disponibilidades = disponibilidadeService.getDisponibilidadesPorMatricula(matricula,
-                    idBanca);
-            todasDisponibilidades.add(disponibilidades);
-        }
-
-        LocalDateTime dataAvaliacao = disponibilidadeService.encontrarDataEmComum(todasDisponibilidades);
-        Banca banca = new Banca();
-        banca = bancaService.getBancaById(idBanca);
-
-        if (dataAvaliacao != null) {
-
-            banca.setDataAvaliacao(dataAvaliacao);
-            StatusBanca status = new StatusBanca();
-            status = statusBancaService.findStatusBancaById(2);
-            banca.setStatus(status);
-            banca.setDataAtualizacao(LocalDateTime.now());
-
-            dao.save(banca);
-
-            String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
-            String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
-            // avisar os demais membros da banca
-            String assunto = "Data para defesa confirmada - MSA";
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            String dataFormatada = dataAvaliacao.format(formatter);
-            String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
-                    banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
-                    dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                emailService.enviarEmail(destinatario2, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
-
-            return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
-
-        } else {
-            String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
-            // String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
-            String assunto = "Aguardando confirmação da data - MSA";
-            String mensagem = "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \"" +
-                    banca.getArtigoAvaliado().getTitulo() +
-                    "\" devido a indisponibilidade de horário dos envolvidos. Por favor, insira novas datas e horários na plataforma."
-                    + "\n\nObrigado.";
-
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                // emailService.enviarEmail(destinatario2, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
-
-            return "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum.";
-        }
-    }*/
+    /*
+     * @PostMapping("/banca/{idBanca}/cadastra/avaliacao")
+     * public String cadastrarAvaliacao(@PathVariable Integer idBanca) {
+     * List<List<Disponibilidade>> todasDisponibilidades = new ArrayList<>();
+     * List<Professor> professores =
+     * composicaoBancaService.professoresByBancaId(idBanca);
+     * 
+     * // Para cada professor, obtenha suas disponibilidades e adicione na lista de
+     * // listas
+     * for (Professor professor : professores) {
+     * String matricula = professor.getMatricula();
+     * List<Disponibilidade> disponibilidades =
+     * disponibilidadeService.getDisponibilidadesPorMatricula(matricula,
+     * idBanca);
+     * todasDisponibilidades.add(disponibilidades);
+     * }
+     * 
+     * LocalDateTime dataAvaliacao =
+     * disponibilidadeService.encontrarDataEmComum(todasDisponibilidades);
+     * Banca banca = new Banca();
+     * banca = bancaService.getBancaById(idBanca);
+     * 
+     * if (dataAvaliacao != null) {
+     * 
+     * banca.setDataAvaliacao(dataAvaliacao);
+     * StatusBanca status = new StatusBanca();
+     * status = statusBancaService.findStatusBancaById(2);
+     * banca.setStatus(status);
+     * banca.setDataAtualizacao(LocalDateTime.now());
+     * 
+     * dao.save(banca);
+     * 
+     * String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+     * String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+     * // avisar os demais membros da banca
+     * String assunto = "Data para defesa confirmada - MSA";
+     * DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+     * String dataFormatada = dataAvaliacao.format(formatter);
+     * String mensagem =
+     * "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
+     * banca.getArtigoAvaliado().getTitulo() +
+     * "\" foi confirmada na plataforma para o dia " +
+     * dataFormatada + " às " + dataAvaliacao.toLocalTime() + "\n\nObrigado.";
+     * try {
+     * emailService.enviarEmail(destinatario, assunto, mensagem);
+     * emailService.enviarEmail(destinatario2, assunto, mensagem);
+     * System.out.println("E-mail enviado com sucesso.");
+     * } catch (MessagingException e) {
+     * System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+     * }
+     * 
+     * return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
+     * 
+     * } else {
+     * String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+     * // String destinatario2 =
+     * banca.getArtigoAvaliado().getOrientador().getEmail();
+     * String assunto = "Aguardando confirmação da data - MSA";
+     * String mensagem =
+     * "Prezado usuário,\n\n\tNão foi possível marcar a data para defesa do artigo \""
+     * +
+     * banca.getArtigoAvaliado().getTitulo() +
+     * "\" devido a indisponibilidade de horário dos envolvidos. Por favor, insira novas datas e horários na plataforma."
+     * + "\n\nObrigado.";
+     * 
+     * try {
+     * emailService.enviarEmail(destinatario, assunto, mensagem);
+     * // emailService.enviarEmail(destinatario2, assunto, mensagem);
+     * System.out.println("E-mail enviado com sucesso.");
+     * } catch (MessagingException e) {
+     * System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+     * }
+     * 
+     * return
+     * "Problema para o cadastro de horário da avaliação, não foi possível achar um horario em comum."
+     * ;
+     * }
+     * }
+     */
 }

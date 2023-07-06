@@ -118,7 +118,7 @@ public class BancaService {
                 banca.setIdBanca(resultSet.getInt("idBanca"));
                 banca.setDataRegistro(resultSet.getTimestamp("dataRegistro").toLocalDateTime());
                 banca.setDataAtualizacao(resultSet.getTimestamp("dataAtualizacao").toLocalDateTime());
-                if(resultSet.getTimestamp("dataAvaliacao") != null)
+                if (resultSet.getTimestamp("dataAvaliacao") != null)
                     banca.setDataAvaliacao(resultSet.getTimestamp("dataAvaliacao").toLocalDateTime());
 
                 bancas.add(banca);
@@ -130,50 +130,48 @@ public class BancaService {
 
         return bancas;
     }
-    /*
-     * public List<Banca> getBancasPorProfessor(String matricula) {
-     * List<Banca> bancas = new ArrayList<>();
-     * 
-     * try (Connection connection = databaseConfig.getConnection();
-     * PreparedStatement statement = connection
-     * .prepareStatement("SELECT *\r\n" + //
-     * "FROM Banca AS B\r\n" + //
-     * "JOIN ComposicaoBanca AS CB ON B.idBanca = CB.idBanca\r\n" + //
-     * "WHERE CB.professorAvaliador = ?")) {
-     * statement.setString(1, matricula);
-     * ResultSet resultSet = statement.executeQuery();
-     * 
-     * while (resultSet.next()) {
-     * Banca banca = new Banca();
-     * 
-     * Professor professor = new Professor();
-     * professor.setMatricula(resultSet.getString("professorAvaliador"));
-     * Artigo artigo = new Artigo();
-     * artigo.setIdArtigo(resultSet.getInt("artigoAvaliado"));
-     * StatusBanca status = new StatusBanca();
-     * status.setId(resultSet.getInt("status"));
-     * 
-     * Timestamp dataAvaliacao = resultSet.getTimestamp("dataAvaliacao");
-     * if (dataAvaliacao != null) {
-     * banca.setDataAvaliacao(dataAvaliacao.toLocalDateTime());
-     * }
-     * 
-     * banca.setIdBanca(resultSet.getInt("idBanca"));
-     * banca.setDataRegistro(resultSet.getTimestamp("dataRegistro").toLocalDateTime(
-     * ));
-     * banca.setDataAtualizacao(resultSet.getTimestamp("dataAtualizacao").
-     * toLocalDateTime());
-     * banca.setArtigoAvaliado(artigo);
-     * banca.setStatus(status);
-     * 
-     * bancas.add(banca);
-     * }
-     * } catch (SQLException e) {
-     * e.printStackTrace();
-     * // Lidar com exceções, se necessário
-     * }
-     * 
-     * return bancas;
-     * }
-     */
+
+    public List<Banca> getBancasPorProfessor(String matricula) {
+        List<Banca> bancas = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT *\r\n" + //
+                                "FROM Banca AS B\r\n" + //
+                                "JOIN ComposicaoBanca AS CB ON B.idBanca = CB.idBanca\r\n" + //
+                                "WHERE CB.professorAvaliador = ?")) {
+            statement.setString(1, matricula);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Banca banca = new Banca();
+
+                Professor professor = new Professor();
+                professor.setMatricula(resultSet.getString("professorAvaliador"));
+                Artigo artigo = new Artigo();
+                artigo.setIdArtigo(resultSet.getInt("artigoAvaliado"));
+                StatusBanca status = new StatusBanca();
+                status.setId(resultSet.getInt("status"));
+
+                Timestamp dataAvaliacao = resultSet.getTimestamp("dataAvaliacao");
+                if (dataAvaliacao != null) {
+                    banca.setDataAvaliacao(dataAvaliacao.toLocalDateTime());
+                }
+
+                banca.setIdBanca(resultSet.getInt("idBanca"));
+                banca.setDataRegistro(resultSet.getTimestamp("dataRegistro").toLocalDateTime());
+                banca.setDataAtualizacao(resultSet.getTimestamp("dataAtualizacao").toLocalDateTime());
+                banca.setArtigoAvaliado(artigo);
+                banca.setStatus(status);
+
+                bancas.add(banca);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return bancas;
+    }
+
 }
