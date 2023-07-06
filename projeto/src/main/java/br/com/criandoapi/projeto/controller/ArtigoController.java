@@ -96,7 +96,7 @@ public class ArtigoController {
             @RequestParam("titulo") String titulo,
             @RequestParam("resumo") String resumo,
             @RequestParam("enviadopor") String enviadopor,
-            @RequestParam("nomeOrientador") String nomeOrientador) throws IOException {
+            @RequestParam("matriculaOrientador") String matriculaOrientador) throws IOException {
 
         byte[] arquivoBytes = file.getBytes();
 
@@ -104,7 +104,7 @@ public class ArtigoController {
         Aluno aluno = alunoService.findAlunoByMatricula(enviadopor);
 
         // Encontre o objeto Professor com base no nome
-        Professor professor = professorService.findProfessorByNome(nomeOrientador);
+        Professor professor = professorService.findProfessorByMatricula(matriculaOrientador);
 
         // Crie um novo objeto Artigo com os campos preenchidos
         Artigo artigo = new Artigo();
