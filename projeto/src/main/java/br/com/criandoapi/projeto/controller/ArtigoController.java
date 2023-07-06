@@ -87,10 +87,10 @@ public class ArtigoController {
 
     // Lista artigos que esperam a avaliação daquele professor (banca)
     @GetMapping("/artigo/aguardandocorrecao/professor/{matricula}")
-    public List<Artigo> listaArtigosAseremAvaliados(@PathVariable String matricula){
+    public List<Artigo> listaArtigosAseremAvaliados(@PathVariable String matricula) {
         return artigoService.getArtigoEsperandoAvaliacao(matricula);
     }
-    
+
     @PostMapping("/artigoupload")
     public Artigo uploadFile(@RequestParam("pdfFile") MultipartFile file,
             @RequestParam("titulo") String titulo,
@@ -132,7 +132,8 @@ public class ArtigoController {
 
         String destinatario = aluno.getEmail();
         String assunto = "Artigo Submetido - MSA";
-        String mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
+        String mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo()
+                + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
 
         try {
             emailService.enviarEmail(destinatario, assunto, mensagem);
@@ -148,48 +149,53 @@ public class ArtigoController {
     @PostMapping("/artigo/{idArtigo}/reenviar")
     public Artigo uploadFile(@PathVariable Integer idArtigo,
             @RequestParam("pdfFile") MultipartFile file) throws IOException {
-        byte[] arquivoBytes = file.getBytes();
-        
-        // Encontra o artigo
-        Artigo artigo = artigoService.findArtigoByid(idArtigo);
-        StatusArtigo statusAtual = artigo.getStatus();
-        Integer idAtual = statusAtual.getId();
-        System.out.println(statusAtual);
-
-        StatusArtigo status = new StatusArtigo();
-        
-        // Corrigindo pela primeira vez
-        if( idAtual == 1)
-            status = statusArtigoService.findStatusArtigoById(2); //Aguardando correção
-        else if(idAtual == 4){// Corrigindo o que a banca sugeriu (aprovado)
-            status = statusArtigoService.findStatusArtigoById(5);
-        } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
-            status = statusArtigoService.findStatusArtigoById(8);
-            artigo.setNotaFinal(-1.f);
-        }
-        
-        // Modifica o arquivo, a data da última modificação e o status
-        artigo.setArquivo(arquivoBytes);
-        artigo.setAlteracao(LocalDateTime.now());
-        artigo.setStatus(status);
-        artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
-
-        // Salva alterações
-        Artigo novoArtigo = dao.save(artigo);
-        versaoService.criaVersao(novoArtigo);
-
-        String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
-        String assunto = "Artigo Modificado - MSA";
-        String mensagem = "Prezado aluno,\n\n\tUm novo arquivo do artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
-
         try {
-            emailService.enviarEmail(destinatario, assunto, mensagem);
-            System.out.println("E-mail enviado com sucesso.");
-        } catch (MessagingException e) {
-            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+            byte[] arquivoBytes = file.getBytes();
+
+            // Encontra o artigo
+            Artigo artigo = artigoService.findArtigoByid(idArtigo);
+            StatusArtigo statusAtual = artigo.getStatus();
+            Integer idAtual = statusAtual.getId();
+            System.out.println(statusAtual);
+
+            StatusArtigo status = new StatusArtigo();
+
+            // Corrigindo pela primeira vez
+            if (idAtual == 1)
+                status = statusArtigoService.findStatusArtigoById(2); // Aguardando correção
+            else if (idAtual == 4) {// Corrigindo o que a banca sugeriu (aprovado)
+                status = statusArtigoService.findStatusArtigoById(5);
+            } else if (idAtual == 7) { // Reprovado mas com tentativa de melhorar
+                status = statusArtigoService.findStatusArtigoById(8);
+                artigo.setNotaFinal(-1.f);
+            }
+
+            // Modifica o arquivo, a data da última modificação e o status
+            artigo.setArquivo(arquivoBytes);
+            artigo.setAlteracao(LocalDateTime.now());
+            artigo.setStatus(status);
+            artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
+
+            // Salva alterações
+            Artigo novoArtigo = dao.save(artigo);
+            versaoService.criaVersao(novoArtigo);
+
+            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String assunto = "Artigo Modificado - MSA";
+            String mensagem = "Prezado aluno,\n\n\tUm novo arquivo do artigo \"" + artigo.getTitulo()
+                    + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
+
+            try {
+                emailService.enviarEmail(destinatario, assunto, mensagem);
+                System.out.println("E-mail enviado com sucesso.");
+            } catch (MessagingException e) {
+                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+            }
+            return artigo;
+        } catch (IOException e) {
+            return null;
         }
 
-        return artigo;
     }
 
     // Professor orientador avalia o artigo
@@ -200,7 +206,6 @@ public class ArtigoController {
         // Obtenha o objeto Artigo do banco de dados com base no ID
         Artigo artigo = new Artigo();
         artigo = dao.findById(idArtigo).orElse(null);
-        
 
         if (artigo != null) {
             Integer statusAtual = artigo.getStatus().getId();
@@ -210,23 +215,23 @@ public class ArtigoController {
             // Integer idStatus = (Integer) requestBody.get("idStatus");
             StatusArtigo status = new StatusArtigo();
 
-            if(correcao){
-                if(statusAtual == 0) // Primeiro envio
+            if (correcao) {
+                if (statusAtual == 0) // Primeiro envio
                     novoStatus = 1;
-                else if(statusAtual == 2) // Ainda possui correções a serem feitas
-                    novoStatus = 1; 
-                else if(statusAtual == 5) //Correções sugeridas pela banca e ainda falta correções
+                else if (statusAtual == 2) // Ainda possui correções a serem feitas
+                    novoStatus = 1;
+                else if (statusAtual == 5) // Correções sugeridas pela banca e ainda falta correções
                     novoStatus = 4;
-                else if(statusAtual == 8) // Reprovado, com possibilidade de correção, mas falta alterações
+                else if (statusAtual == 8) // Reprovado, com possibilidade de correção, mas falta alterações
                     novoStatus = 7;
             } else {
-                if(statusAtual == 0) // Primeiro envio
+                if (statusAtual == 0) // Primeiro envio
                     novoStatus = 3;
-                else if(statusAtual == 2) // Pronto para banca
-                    novoStatus = 3; 
-                else if(statusAtual == 5) // Correções sugeridas pela banca feitas com sucesso
+                else if (statusAtual == 2) // Pronto para banca
+                    novoStatus = 3;
+                else if (statusAtual == 5) // Correções sugeridas pela banca feitas com sucesso
                     novoStatus = 6;
-                else if(statusAtual == 8) // Reprovado, com possibilidade de recuperação, pronto para reavaliação
+                else if (statusAtual == 8) // Reprovado, com possibilidade de recuperação, pronto para reavaliação
                     novoStatus = 9;
             }
 
@@ -242,19 +247,20 @@ public class ArtigoController {
             String assunto = "Mudança no Status do Artigo - MSA";
             String mensagem = "";
 
-            if(novoStatus == 1){
-                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador. Por favor, verifique as correções e faça as devidas alterações.\n\nObrigado.";
-            } else if(novoStatus == 3){
-                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
+            if (novoStatus == 1) {
+                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo()
+                        + "\" foi revisado pelo seu orientador. Por favor, verifique as correções e faça as devidas alterações.\n\nObrigado.";
+            } else if (novoStatus == 3) {
+                mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo()
+                        + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
             }
-  
 
-        try {
-            emailService.enviarEmail(destinatario, assunto, mensagem);
-            System.out.println("E-mail enviado com sucesso.");
-        } catch (MessagingException e) {
-            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-        }
+            try {
+                emailService.enviarEmail(destinatario, assunto, mensagem);
+                System.out.println("E-mail enviado com sucesso.");
+            } catch (MessagingException e) {
+                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
+            }
 
             return ResponseEntity.ok("Artigo avaliado com sucesso.");
         } else {
