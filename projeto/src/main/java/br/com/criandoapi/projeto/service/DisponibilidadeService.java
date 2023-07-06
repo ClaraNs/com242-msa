@@ -35,7 +35,7 @@ public class DisponibilidadeService {
         this.databaseConfig = databaseConfig;
     }
 
-    public Disponibilidade getDisponibilidadePorId(Integer idDisponibilidade){
+    public Disponibilidade getDisponibilidadePorId(Integer idDisponibilidade) {
         return dao.findById(idDisponibilidade).orElse(null);
     }
 
@@ -72,7 +72,7 @@ public class DisponibilidadeService {
 
         return listaDisponibilidade;
     }
-    
+
     // Recuperar as disponibilidades por banca
     public List<Disponibilidade> getDisponibilidadesPorBanca(Integer idBanca) {
         List<Disponibilidade> listaDisponibilidade = new ArrayList<>();
@@ -80,6 +80,39 @@ public class DisponibilidadeService {
         try (Connection connection = databaseConfig.getConnection();
                 PreparedStatement statement = connection
                         .prepareStatement("SELECT * FROM disponibilidade WHERE idBanca = ?")) {
+            statement.setInt(1, idBanca);
+            ResultSet resultSet = statement.executeQuery();
+
+            while (resultSet.next()) {
+                Disponibilidade disponibilidade = new Disponibilidade();
+                disponibilidade.setIdDisponibilidade(resultSet.getInt("idDisponibilidade"));
+
+                Banca banca = new Banca();
+                banca = bancaService.getBancaById(idBanca);
+                disponibilidade.setBanca(banca);
+
+                // Converter os valores de Date para LocalTime
+                Timestamp timestamp = resultSet.getTimestamp("data");
+                LocalDateTime dataHoraInicio = timestamp.toLocalDateTime();
+                disponibilidade.setData(dataHoraInicio);
+
+                listaDisponibilidade.add(disponibilidade);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+        }
+
+        return listaDisponibilidade;
+    }
+
+    // Recuperar as disponibilidades válidas banca
+    public List<Disponibilidade> getDisponibilidadesValidasPorBanca(Integer idBanca) {
+        List<Disponibilidade> listaDisponibilidade = new ArrayList<>();
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statement = connection
+                        .prepareStatement("SELECT * FROM disponibilidade WHERE aprovacao = true AND idBanca = ?")) {
             statement.setInt(1, idBanca);
             ResultSet resultSet = statement.executeQuery();
 
@@ -151,6 +184,35 @@ public class DisponibilidadeService {
 
         // Nenhuma data em comum foi encontrada
         return null;
+    }
+
+    // Retorna true quando todas as disponibilidades estão inválidas
+    public boolean verificarDisponibilidadesFalsePorBanca(Integer idBanca) {
+        int totalDisponibilidades;
+        int totalDisponibilidadesFalse;
+
+        try (Connection connection = databaseConfig.getConnection();
+                PreparedStatement statementTotal = connection.prepareStatement(
+                        "SELECT COUNT(idDisponibilidade) FROM disponibilidade WHERE idBanca = ?");
+                PreparedStatement statementFalse = connection.prepareStatement(
+                        "SELECT COUNT(idDisponibilidade) FROM disponibilidade WHERE idBanca = ? AND aprovacao = false")) {
+            statementTotal.setInt(1, idBanca);
+            ResultSet resultSetTotal = statementTotal.executeQuery();
+            resultSetTotal.next();
+            totalDisponibilidades = resultSetTotal.getInt(1);
+
+            statementFalse.setInt(1, idBanca);
+            ResultSet resultSetFalse = statementFalse.executeQuery();
+            resultSetFalse.next();
+            totalDisponibilidadesFalse = resultSetFalse.getInt(1);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Lidar com exceções, se necessário
+            return false;
+        }
+
+        // Verificar se todas as disponibilidades têm "aprovacao" definido como false
+        return totalDisponibilidades > 0 && totalDisponibilidades == totalDisponibilidadesFalse;
     }
 
     // Se não tiver, pedir pra preencher de novo

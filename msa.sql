@@ -124,6 +124,7 @@ INSERT INTO StatusBanca VALUES(3, 'TFG aprovado - Necessita correção');
 INSERT INTO StatusBanca VALUES(4, 'TFG reprovado - Possibilidade de correção');
 INSERT INTO StatusBanca VALUES(5, 'TFG Finalizado - aprovado');
 INSERT INTO StatusBanca VALUES(6, 'TFG Finalizado - reprovado');
+INSERT INTO StatusBanca VALUES(7, 'Aguardando Inserção de Novas Datas');
 
 INSERT INTO StatusArtigo VALUES(0, 'Aguardando Aprovação')
 INSERT INTO StatusArtigo VALUES(1, 'Aguardando Realização da Correção proposta');
@@ -136,6 +137,7 @@ INSERT INTO StatusArtigo VALUES(7, 'Artigo Reprovado com Possibilidade de Corre�
 INSERT INTO StatusArtigo VALUES(8, 'Artigo Reprovado Corrigido - Aguardando Aprovação');
 INSERT INTO StatusArtigo VALUES(9, 'Artigo Resubmetido para Banca');
 INSERT INTO StatusArtigo VALUES(10, 'Artigo Reprovado.');
+
 INSERT INTO Aluno (matricula, nome, email)
 VALUES('2020123456', 'Clara', 'anaclarans@live.com');	
 INSERT INTO Aluno (matricula, nome, email)
@@ -156,11 +158,11 @@ SELECT COUNT(*) FROM ComposicaoBanca WHERE nota > 0;
 SELECT a.status, a.notafinal, b.status FROM ARTIGO a JOIN banca b ON b.artigoavaliado = a.idartigo
 SELECT * FROM artigo
 SELECT * FROM BANCA
-SELECT * FROM composicaoBanca
-UPDATE BANCA SET STATUS = 4
-UPDATE artigo SET STATUS = 7
-UPDATE artigo SET notafinal = -1
-UPDATE composicaobanca SET nota = -1
+SELECT * FROM statusbanca
+UPDATE BANCA SET STATUS = 2;
+UPDATE artigo SET STATUS = 3;
+UPDATE artigo SET notafinal = -1;
+UPDATE composicaobanca SET nota = 5;
 /*DELETE FROM disponibilidade
 SELECT * FROM artigo where idartigo = 2
 SELECT * FROM statusartigo

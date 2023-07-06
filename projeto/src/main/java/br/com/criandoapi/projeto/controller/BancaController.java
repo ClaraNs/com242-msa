@@ -73,6 +73,12 @@ public class BancaController {
         return bancaService.getBancasPorStatus(0);
     }
 
+    // Lista bancas aguardando a inserção de novas disponibilidades
+    @GetMapping("/banca/aguardandonovasdatas/{matriculaOrientador}")
+    public List<Banca> listBancasSemDataPorOrientador(@PathVariable String matriculaOrientador) {
+        return bancaService.BancasSemDataPorOrientador(matriculaOrientador);
+    }
+
     // Bancas por professor, pela matrícula
     /*@GetMapping("/banca/{matricula}")
     public List<Banca> listaBancasPorMatriculaProfessor(@PathVariable String matricula) {
@@ -119,7 +125,7 @@ public class BancaController {
      */
 
     @PostMapping("/artigo/{idArtigo}/banca/cadastro")
-    public String cadastrarBancas(@PathVariable Integer idArtigo) {
+    public String solicitarBanca(@PathVariable Integer idArtigo) {
         Artigo artigo = artigoService.findArtigoByid(idArtigo);
 
         // Pronto para banca

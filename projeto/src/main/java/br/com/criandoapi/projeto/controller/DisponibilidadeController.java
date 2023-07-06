@@ -27,6 +27,7 @@ import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.DisponibilidadeService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.RequisicaoService;
 
 @RestController
 @CrossOrigin("*")
@@ -38,15 +39,18 @@ public class DisponibilidadeController {
     private final EmailService emailService;
     private final BancaService bancaService;
     private final DisponibilidadeService disponibilidadeService;
+    private final RequisicaoService requisicaoService;
 
     @Autowired
     public DisponibilidadeController(IDisponibilidade dao, ProfessorService professorService,
-           EmailService emailService, BancaService bancaService, DisponibilidadeService disponibilidadeService) {
+           EmailService emailService, BancaService bancaService, DisponibilidadeService disponibilidadeService,
+           RequisicaoService requisicaoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.emailService = emailService;
         this.bancaService = bancaService;
         this.disponibilidadeService = disponibilidadeService;
+        this.requisicaoService = requisicaoService;
     }
 
     @GetMapping("/disponibilidade")
@@ -54,10 +58,10 @@ public class DisponibilidadeController {
         return (List<Disponibilidade>) dao.findAll();
     }
 
-    // Lista as disponibilidades da banca informada
+    // Lista as disponibilidades válidas da banca informada
     @GetMapping("/disponibilidade/banca/{idBanca}")
     public List<Disponibilidade> listDisponibilidadesPorBanca(@PathVariable Integer idBanca) {
-        return disponibilidadeService.getDisponibilidadesPorBanca(idBanca);
+        return disponibilidadeService.getDisponibilidadesValidasPorBanca(idBanca);
     }
 
     // Orientador cadastra disponibilidades
@@ -89,7 +93,6 @@ public class DisponibilidadeController {
         }
     }
 
-    // Post mudança de status pelo coordenador
     @PostMapping("disponibilidade/banca/{idBanca}/{idDisponibilidade}")
     public String aprovarBanca(@PathVariable Integer idBanca,
             @PathVariable Integer idDisponibilidade,
@@ -104,16 +107,21 @@ public class DisponibilidadeController {
                 disponibilidade.setAprovacao(aprovacao);
                 dao.save(disponibilidade);
 
-                String destinatario = bancaService.getBancaById(idBanca).getArtigoAvaliado().getOrientador().getEmail();
+                // Verificar se não era a última data válida
+                if(disponibilidadeService.verificarDisponibilidadesFalsePorBanca(idBanca)){
+                    bancaService.mudarStatusBanca(idBanca, 7);
+                    String email = bancaService.getBancaById(idBanca).getArtigoAvaliado().getOrientador().getEmail();
+                    String assunto = "Necessária Inclusão de NOvas Datas - MSA";
+                    String mensagem = "Prezado orientador,\n\n\tTodas as datas cadastradas para possível defesa do artigo \"" + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo() + "\" foram dispensadas. É necessário a inclusão de novas datas.\n\nObrigado.";
+
+                    requisicaoService.realizaRequisicao(email, assunto, mensagem);
+                }
+
+                String email = bancaService.getBancaById(idBanca).getArtigoAvaliado().getOrientador().getEmail();
                 String assunto = "Data Excluída da Disponibilidade - MSA";
                 String mensagem = "Prezado orientador,\n\n\tA data" + disponibilidade.getData().toLocalDate() + "cadastrada para possível defesa do artigo \"" + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo() + "\" foi dispensada por um dos membros da banca. Caso seja necessário, adicione novas opções.\n\nObrigado.";
 
-                try {
-                    emailService.enviarEmail(destinatario, assunto, mensagem);
-                    System.out.println("E-mail enviado com sucesso.");
-                } catch (MessagingException e) {
-                    System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-                }
+                requisicaoService.realizaRequisicao(email, assunto, mensagem);
                 return "Essa data não será mais selecionável para os demais participantes da banca";
             } else {
                 return "Data continua disponível";
