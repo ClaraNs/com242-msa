@@ -27,6 +27,7 @@ import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
 import br.com.criandoapi.projeto.service.StatusArtigoService;
+import br.com.criandoapi.projeto.service.VersaoService;
 
 import javax.mail.MessagingException;
 
@@ -41,16 +42,19 @@ public class ArtigoController {
     private final ArtigoService artigoService;
     private final StatusArtigoService statusArtigoService;
     private final EmailService emailService;
+    private final VersaoService versaoService;
 
     @Autowired
     public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService,
-            ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService) {
+            ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService,
+            VersaoService versaoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
         this.artigoService = artigoService;
         this.statusArtigoService = statusArtigoService;
         this.emailService = emailService;
+        this.versaoService = versaoService;
     }
 
     @GetMapping("/artigo")
@@ -116,6 +120,8 @@ public class ArtigoController {
         // Salve o artigo com o caminho do arquivo e a URL de download no banco de dados
         novoArtigo = dao.save(artigo);
 
+        this.versaoService.criaVersao(novoArtigo);
+
         String destinatario = aluno.getEmail();
         String assunto = "Artigo Submetido - MSA";
         String mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo() + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
@@ -129,6 +135,7 @@ public class ArtigoController {
 
         return novoArtigo;
     }
+
 
      @PostMapping("artigo/{idArtigo}/avaliacao")
     public ResponseEntity<String> avaliarArtigo(@PathVariable Integer idArtigo,

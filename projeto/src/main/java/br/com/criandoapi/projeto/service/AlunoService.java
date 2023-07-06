@@ -77,25 +77,4 @@ public class AlunoService {
         }
     }
 
-    /*public List<String> getEmailBancaByArtigoId(Integer idArtigo) {
-        try (Connection connection = databaseConfig.getConnection();
-                PreparedStatement statement = connection.prepareStatement(
-                        "SELECT p.email FROM professor as p JOIN banca as b ON b.professorAvaliador = p.matricula WHERE artigoAvaliado = ?")) {
-            statement.setInt(1, idArtigo);
-            ResultSet resultSet = statement.executeQuery();
-            List<String> emails = new ArrayList<>();
-
-            while (resultSet.next()) {
-                String email = resultSet.getString("email");
-                emails.add(email);
-            }
-
-            return emails;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            // Lidar com exceções, se necessário
-        }
-
-        return null; // Retorna null se o aluno não for encontrado
-    }*/
 }
