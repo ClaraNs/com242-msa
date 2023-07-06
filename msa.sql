@@ -77,6 +77,16 @@ CREATE TABLE Disponibilidade (
     	REFERENCES Banca (idBanca)
 ); -- adicioanr Booleano que servirá para todos
 
+CREATE TABLE Versao (
+	idVersao serial PRIMARY KEY,
+	idArtigo int not null,
+	titulo varchar(80) not null,
+	arquivo bytea not null,
+	dataInsercao TimeStamp not null,
+	FOREIGN KEY (idArtigo) 
+	REFERENCES Artigo (idArtigo)
+);
+
 -- Trigger
 CREATE OR REPLACE FUNCTION verificarNotas()
   RETURNS TRIGGER AS
