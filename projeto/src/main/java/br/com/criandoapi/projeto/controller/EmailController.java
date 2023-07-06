@@ -2,9 +2,11 @@ package br.com.criandoapi.projeto.controller;
 
 import javax.mail.MessagingException;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,16 +24,18 @@ public class EmailController {
     }
 
     @PostMapping("/envia/email")
-    public String enviaEmail(@RequestParam("email") String email,
-            @RequestParam("assunto") String assunto,
-            @RequestParam("mensagem") String mensagem){
+    public String enviaEmail(@RequestBody String requestBody) {
+        try {
+            JSONObject json = new JSONObject(requestBody);
+            String email = json.getString("email");
+            String assunto = json.getString("assunto");
+            String mensagem = json.getString("mensagem");
 
-            try {
-                emailService.enviarEmail(email, assunto, mensagem);
-                return "E-mail enviado com sucesso.";
-            } catch (MessagingException e) {
-                return"Erro ao enviar o e-mail: " + e.getMessage();
-            }
+            emailService.enviarEmail(email, assunto, mensagem);
+            return "E-mail enviado com sucesso.";
+        } catch (MessagingException e) {
+            return "Erro ao enviar o e-mail: " + e.getMessage();
+        }
     }
 
 }

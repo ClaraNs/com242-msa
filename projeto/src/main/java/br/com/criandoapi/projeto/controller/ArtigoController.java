@@ -27,6 +27,7 @@ import br.com.criandoapi.projeto.service.ArtigoService;
 import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.RequisicaoService;
 import br.com.criandoapi.projeto.service.StatusArtigoService;
 import br.com.criandoapi.projeto.service.VersaoService;
 
@@ -45,11 +46,12 @@ public class ArtigoController {
     private final EmailService emailService;
     private final VersaoService versaoService;
     private final ComposicaoBancaService composicaoBancaService;
+    private final RequisicaoService requisicaoService;
 
     @Autowired
     public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService,
             ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService,
-            VersaoService versaoService, ComposicaoBancaService composicaoBancaService) {
+            VersaoService versaoService, ComposicaoBancaService composicaoBancaService, RequisicaoService requisicaoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
@@ -58,6 +60,7 @@ public class ArtigoController {
         this.emailService = emailService;
         this.versaoService = versaoService;
         this.composicaoBancaService = composicaoBancaService;
+        this.requisicaoService = requisicaoService;
     }
 
     @GetMapping("/artigo")
@@ -133,17 +136,13 @@ public class ArtigoController {
 
         versaoService.criaVersao(novoArtigo);
 
-        String destinatario = aluno.getEmail();
+        String email = aluno.getEmail();
+        System.out.println(email);
         String assunto = "Artigo Submetido - MSA";
         String mensagem = "Prezado aluno,\n\n\tSeu artigo \"" + artigo.getTitulo()
                 + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
 
-        try {
-            emailService.enviarEmail(destinatario, assunto, mensagem);
-            System.out.println("E-mail enviado com sucesso.");
-        } catch (MessagingException e) {
-            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-        }
+        requisicaoService.realizaRequisicao(email, assunto, mensagem);
 
         return novoArtigo;
     }
