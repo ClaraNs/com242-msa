@@ -51,7 +51,8 @@ public class ArtigoController {
     @Autowired
     public ArtigoController(IArtigo dao, ProfessorService professorService, AlunoService alunoService,
             ArtigoService artigoService, StatusArtigoService statusArtigoService, EmailService emailService,
-            VersaoService versaoService, ComposicaoBancaService composicaoBancaService, RequisicaoService requisicaoService) {
+            VersaoService versaoService, ComposicaoBancaService composicaoBancaService,
+            RequisicaoService requisicaoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.alunoService = alunoService;
@@ -160,41 +161,36 @@ public class ArtigoController {
             Integer idAtual = statusAtual.getId();
             System.out.println(statusAtual);
 
-        StatusArtigo status = new StatusArtigo();
-        
-        // Corrigindo pela primeira vez
-        if( idAtual == 1)
-            status = statusArtigoService.findStatusArtigoById(2); //Aguardando correção
-        else if(idAtual == 4){// Corrigindo o que a banca sugeriu (aprovado)
-            status = statusArtigoService.findStatusArtigoById(5);
-        } else if(idAtual == 7){ //Reprovado mas com tentativa de melhorar
-            status = statusArtigoService.findStatusArtigoById(8);
-            // Resetar notas
-            artigo.setNotaFinal(-1.f); 
-            composicaoBancaService.resetaNotas(artigoService.getIdBancaByIdArtigo(idArtigo));
-        }
-        
-        // Modifica o arquivo, a data da última modificação e o status
-        artigo.setArquivo(arquivoBytes);
-        artigo.setAlteracao(LocalDateTime.now());
-        artigo.setStatus(status);
-        artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
+            StatusArtigo status = new StatusArtigo();
+
+            // Corrigindo pela primeira vez
+            if (idAtual == 1)
+                status = statusArtigoService.findStatusArtigoById(2); // Aguardando correção
+            else if (idAtual == 4) {// Corrigindo o que a banca sugeriu (aprovado)
+                status = statusArtigoService.findStatusArtigoById(5);
+            } else if (idAtual == 7) { // Reprovado mas com tentativa de melhorar
+                status = statusArtigoService.findStatusArtigoById(8);
+                // Resetar notas
+                artigo.setNotaFinal(-1.f);
+                composicaoBancaService.resetaNotas(artigoService.getIdBancaByIdArtigo(idArtigo));
+            }
+
+            // Modifica o arquivo, a data da última modificação e o status
+            artigo.setArquivo(arquivoBytes);
+            artigo.setAlteracao(LocalDateTime.now());
+            artigo.setStatus(status);
+            artigo.setUrl("/artigo/" + artigo.getIdArtigo() + "/download");
 
             // Salva alterações
             Artigo novoArtigo = dao.save(artigo);
             versaoService.criaVersao(novoArtigo);
 
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String email = alunoService.getEmailAlunoByArtigoId(idArtigo);
             String assunto = "Artigo Modificado - MSA";
             String mensagem = "Prezado aluno,\n\n\tUm novo arquivo do artigo \"" + artigo.getTitulo()
                     + "\" foi submetido na plataforma e está aguardando correção de seu orientador.\n\nObrigado.";
 
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
+            requisicaoService.realizaRequisicao(email, assunto, mensagem);
             return artigo;
         } catch (IOException e) {
             return null;
@@ -247,7 +243,7 @@ public class ArtigoController {
             // Salve as alterações no artigo
             dao.save(artigo);
 
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String email = alunoService.getEmailAlunoByArtigoId(idArtigo);
             String assunto = "Mudança no Status do Artigo - MSA";
             String mensagem = "";
 
@@ -259,12 +255,7 @@ public class ArtigoController {
                         + "\" foi revisado pelo seu orientador e está pronto para ser avaliado pela banca.\n\nObrigado.";
             }
 
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
+            requisicaoService.realizaRequisicao(email, assunto, mensagem);
 
             return ResponseEntity.ok("Artigo avaliado com sucesso.");
         } else {

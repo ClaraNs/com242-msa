@@ -28,6 +28,7 @@ import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.DisponibilidadeService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.RequisicaoService;
 import br.com.criandoapi.projeto.service.StatusBancaService;
 
 @RestController
@@ -43,13 +44,13 @@ public class BancaController {
     private final StatusBancaService statusBancaService;
     private final AlunoService alunoService;
     private final EmailService emailService;
-    private final ComposicaoBancaService composicaoBancaService;
+    private final RequisicaoService requisicaoService;
 
     @Autowired
     public BancaController(IBanca dao, ProfessorService professorService, ArtigoService artigoService,
             BancaService bancaService, DisponibilidadeService disponibilidadeService,
             StatusBancaService statusBancaService, AlunoService alunoService, EmailService emailService,
-            ComposicaoBancaService composicaoBancaService) {
+            ComposicaoBancaService composicaoBancaService, RequisicaoService requisicaoService) {
         this.dao = dao;
         this.professorService = professorService;
         this.artigoService = artigoService;
@@ -58,7 +59,7 @@ public class BancaController {
         this.statusBancaService = statusBancaService;
         this.alunoService = alunoService;
         this.emailService = emailService;
-        this.composicaoBancaService = composicaoBancaService;
+        this.requisicaoService = requisicaoService;
     }
 
     @GetMapping("/banca")
@@ -94,20 +95,15 @@ public class BancaController {
 
             Integer idArtigo = banca.getArtigoAvaliado().getIdArtigo();
 
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
-            String destinatario2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
+            String email = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String email2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
             String assunto = "Banca Liberada - MSA";
             String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \""
                     + banca.getArtigoAvaliado().getTitulo()
                     + "\" foi aprovada na plataforma pelo coordenador de TFG. Agora é necessário inserir as datas e horários disponíveis para que o sistema encontre a melhor data para a avaliação.\n\nObrigado.";
 
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                emailService.enviarEmail(destinatario2, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
+            requisicaoService.realizaRequisicao(email, assunto, mensagem);
+            requisicaoService.realizaRequisicao(email2, assunto, mensagem);
 
             return "Banca aprovada.";
         }
@@ -145,20 +141,15 @@ public class BancaController {
             dao.save(banca);
 
             // Avisa aluno e orientador que a banca foi solicitada
-            String destinatario = alunoService.getEmailAlunoByArtigoId(idArtigo);
-            String destinatario2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
+            String email = alunoService.getEmailAlunoByArtigoId(idArtigo);
+            String email2 = professorService.getEmailOrientadorByArtigoId(idArtigo);
             String assunto = "Solicitação de Banca - MSA";
             String mensagem = "Prezado usuário,\n\n\tA solicitação da banca para defesa do artigo \""
                     + artigo.getTitulo()
                     + "\" foi submetido na plataforma e está aguardando liberação do coordenador de TFG.\n\nObrigado.";
 
-            try {
-                emailService.enviarEmail(destinatario, assunto, mensagem);
-                emailService.enviarEmail(destinatario2, assunto, mensagem);
-                System.out.println("E-mail enviado com sucesso.");
-            } catch (MessagingException e) {
-                System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-            }
+            requisicaoService.realizaRequisicao(email, assunto, mensagem);
+            requisicaoService.realizaRequisicao(email2, assunto, mensagem);
 
             return "Banca cadastradas com sucesso.";
         } else {
@@ -180,8 +171,8 @@ public class BancaController {
 
         dao.save(banca);
 
-        String destinatario = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
-        String destinatario2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+        String email = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+        String email2 = banca.getArtigoAvaliado().getOrientador().getEmail();
         // avisar os demais membros da banca
         String assunto = "Data para defesa confirmada - MSA";
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -189,13 +180,9 @@ public class BancaController {
         String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
                 banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
                 dataFormatada + " às " + dataAvaliacao.getData().toLocalTime() + "\n\nObrigado.";
-        try {
-            emailService.enviarEmail(destinatario, assunto, mensagem);
-            emailService.enviarEmail(destinatario2, assunto, mensagem);
-            System.out.println("E-mail enviado com sucesso.");
-        } catch (MessagingException e) {
-            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-        }
+        
+        requisicaoService.realizaRequisicao(email, assunto, mensagem);
+        requisicaoService.realizaRequisicao(email2, assunto, mensagem);
 
         return "Horário de avaliação cadastrado com sucesso" + dataAvaliacao;
     }

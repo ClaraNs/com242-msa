@@ -26,6 +26,7 @@ import br.com.criandoapi.projeto.service.BancaService;
 import br.com.criandoapi.projeto.service.ComposicaoBancaService;
 import br.com.criandoapi.projeto.service.EmailService;
 import br.com.criandoapi.projeto.service.ProfessorService;
+import br.com.criandoapi.projeto.service.RequisicaoService;
 import br.com.criandoapi.projeto.service.StatusBancaService;
 
 @RestController
@@ -41,11 +42,12 @@ public class ComposicaoBancaController {
     private final ComposicaoBancaService composicaoBancaService;
     private final ArtigoService artigoService;
     private final StatusBancaService statusBancaService;
+    private final RequisicaoService requisicaoService;
 
     @Autowired
     public ComposicaoBancaController(IComposicaoBanca dao, IBanca bancaRepository, ProfessorService professorService,
             BancaService bancaService, EmailService emailService, ComposicaoBancaService composicaoBancaService,
-            ArtigoService artigoService, StatusBancaService statusBancaService) {
+            ArtigoService artigoService, StatusBancaService statusBancaService, RequisicaoService requisicaoService) {
         this.dao = dao;
         this.bancaRepository = bancaRepository;
         this.professorService = professorService;
@@ -54,6 +56,7 @@ public class ComposicaoBancaController {
         this.composicaoBancaService = composicaoBancaService;
         this.artigoService = artigoService;
         this.statusBancaService = statusBancaService;
+        this.requisicaoService = requisicaoService;
     }
 
     @GetMapping("/composicao")
@@ -75,19 +78,14 @@ public class ComposicaoBancaController {
 
         dao.save(composicao);
 
-        String destinatario = professor.getEmail();
-
+        String email = professor.getEmail();
+        System.out.println(email);
         String assunto = "Cadastro em Banca de Avaliação - MSA";
         String mensagem = "Prezado professor,\n\n\tVocê foi adiconado a banca responsável por avaliar o artigo \""
                 + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
                 + "\". Agora é necessário inserir as datas e horários disponíveis para que o sistema encontre a melhor data para a avaliação.\n\nObrigado.";
 
-        try {
-            emailService.enviarEmail(destinatario, assunto, mensagem);
-            System.out.println("E-mail enviado com sucesso.");
-        } catch (MessagingException e) {
-            System.out.println("Erro ao enviar o e-mail: " + e.getMessage());
-        }
+        requisicaoService.realizaRequisicao(email, assunto, mensagem);
 
         return " " + nome + " cadastrado com sucesso na banca " + idBanca;
     }
@@ -107,69 +105,111 @@ public class ComposicaoBancaController {
                 composicao.setNota(nota);
                 composicao.setConsideracoes(consideracao);
 
-                if(correcao){
+                if (correcao) {
                     banca.setCorrecao(true);
                 }
 
                 dao.save(composicao);
 
                 Integer idArtigo = banca.getArtigoAvaliado().getIdArtigo();
-                
+
                 Float notaFinal = artigoService.getNotaByIdArtigo(idArtigo);
                 System.out.println(notaFinal);
                 Boolean aprovado = false;
 
-                if(notaFinal >= 6.f)
+                if (notaFinal >= 6.f)
                     aprovado = true;
-                
+
                 // Todos os membros da banca já avaliaram
-                if( notaFinal >= 0.f){
+                if (notaFinal >= 0.f) {
+                    String email = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+                    String email2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+                    String assunto = "";
+                    String mensagem = " ";
+
                     Integer novoStatus = -1;
                     Boolean corrigir = banca.getCorrecao();
 
-                    if(banca.getStatus().getId() == 2){// Primeira avaliação do TFG
-                        if(aprovado){
-                            if(correcao){// Aprovado com correções
-                            artigoService.mudarStatusArtigo(idArtigo, 4);
-                            novoStatus = 3;
+                    if (banca.getStatus().getId() == 2) {// Primeira avaliação do TFG
+                        if (aprovado) {
+                            if (correcao) {// Aprovado com correções
+                                artigoService.mudarStatusArtigo(idArtigo, 4);
+                                novoStatus = 3;
+
+                                assunto = "Artigo Aprovado com Correções - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\". Agora são necessárias as correções sugeridas pelos membros da banca, em seguida o artigo já estará pronto. Parabéns.\n\nObrigado.";
                             } else { // Aprovado direto
                                 novoStatus = 5;
                                 artigoService.mudarStatusArtigo(idArtigo, 6);
-                            } 
-                        } else{ //Reprovado
+
+                                assunto = "Artigo Aprovado - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\", seu TFG foi aprovado, parabéns.\n\nObrigado.";
+                            }
+                        } else { // Reprovado
                             System.out.println("ELE FOI REPROVADO");
-                            if(corrigir){ //Possibilidade de correção
+                            if (corrigir) { // Possibilidade de correção
                                 System.out.println("Novo status = " + novoStatus);
                                 System.out.println("PODE CORRIGIR");
                                 novoStatus = 4;
                                 artigoService.mudarStatusArtigo(idArtigo, 7);
-                            } else{ // Reprovado direto 
+
+                                assunto = "Artigo Reprovado com Possíveis Correções - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\". Infelizmente, seu TFG não foi aprovado, mas ainda é possível uma resubmissão dentro do prazo.\n\nObrigado.";
+                            } else { // Reprovado direto
                                 System.out.println("JÁ ERA");
                                 novoStatus = 6;
+
                                 artigoService.mudarStatusArtigo(idArtigo, 10);
+                                assunto = "Artigo Reprovado - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\". Infelizmente seu TFG não foi aprovado.\n\nObrigado.";
                             }
-                        }  
-                    } else if(banca.getStatus().getId() == 4){ // Segunda avaliação
-                        if(aprovado){
-                            if(correcao){// Aprovado com correções
-                            artigoService.mudarStatusArtigo(idArtigo, 4);
-                            novoStatus = 3;
+                        }
+                    } else if (banca.getStatus().getId() == 4) { // Segunda avaliação
+                        if (aprovado) {
+                            if (correcao) {// Aprovado com correções
+                                artigoService.mudarStatusArtigo(idArtigo, 4);
+                                novoStatus = 3;
+
+                                assunto = "Artigo Aprovado com Correções - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\". Agora são necessárias as correções sugeridas pelos membros da banca, em seguida o artigo já estará pronto. Parabéns.\n\nObrigado.";
                             } else { // Aprovado direto
                                 novoStatus = 5;
                                 artigoService.mudarStatusArtigo(idArtigo, 6);
-                            } 
-                        } else{ // Reprovado sem mais chances
+
+                                assunto = "Artigo Aprovado - MSA";
+                                mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                        + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                        + "\", seu TFG foi aprovado, parabéns.\n\nObrigado.";
+                            }
+                        } else { // Reprovado sem mais chances
                             System.out.println("JÁ ERA");
                             novoStatus = 6;
                             artigoService.mudarStatusArtigo(idArtigo, 10);
+
+                            assunto = "Artigo Reprovado - MSA";
+                            mensagem = "Prezado usuário,\n\n\tFoi lançada no sistema a nota para o artigo \""
+                                    + bancaService.getBancaById(idBanca).getArtigoAvaliado().getTitulo()
+                                    + "\". Infelizmente seu TFG não foi aprovado.\n\nObrigado.";
                         }
                     }
-                        
+
                     System.out.println("Novo status = " + novoStatus);
                     StatusBanca status = statusBancaService.findStatusBancaById(novoStatus);
-                    banca.setStatus(status);                    
+                    banca.setStatus(status);
                     bancaRepository.save(banca);
 
+                    requisicaoService.realizaRequisicao(email, assunto, mensagem);
+                    requisicaoService.realizaRequisicao(email2, assunto, mensagem);
                     return "Todos os membros já avaliariam, novo status da banca = " + novoStatus;
                 }
                 return "Artigo avaliado com sucesso" + " nota final agora está " + notaFinal;
