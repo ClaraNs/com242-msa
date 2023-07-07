@@ -1,6 +1,8 @@
 package br.com.criandoapi.projeto.controller;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +11,7 @@ import javax.mail.MessagingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -117,7 +120,37 @@ public class BancaController {
             return "Banca aprovada.";
         }
 
-        return "Banca ainda aguardando aprovação";
+        return "Banca não foi aprovada.";
+    }
+
+    @PostMapping("/banca/{idBanca}/cadastra/avaliacao")
+    public String setDataAvaliacao(@PathVariable Integer idBanca,
+            @ModelAttribute("data") String dataString,
+            @ModelAttribute("horaInicio") String horaInicioString) {
+        
+        LocalTime horaInicio = LocalTime.parse(horaInicioString);
+        LocalDate data = LocalDate.parse(dataString);
+
+        Banca banca = bancaService.getBancaById(idBanca);
+        banca.setDataAvaliacao(data.atTime(horaInicio));
+        StatusBanca status = statusBancaService.findStatusBancaById(2);
+        banca.setStatus(status);
+        banca.setDataAtualizacao(LocalDateTime.now());
+
+        dao.save(banca);
+
+        String email = banca.getArtigoAvaliado().getEnviadoPor().getEmail();
+        String email2 = banca.getArtigoAvaliado().getOrientador().getEmail();
+        // avisar os demais membros da banca
+        String assunto = "Data para defesa confirmada - MSA";
+        String mensagem = "Prezado usuário,\n\n\tA data para avaliação da defesa do artigo \"" +
+                banca.getArtigoAvaliado().getTitulo() + "\" foi confirmada na plataforma para o dia " +
+                data + " às " + horaInicio + "\n\nObrigado.";
+
+        requisicaoService.realizaRequisicao(email, assunto, mensagem);
+        requisicaoService.realizaRequisicao(email2, assunto, mensagem);
+
+        return "Horário de avaliação cadastrado com sucesso" + data;
     }
 
     @GetMapping("/professor/{matricula}/bancas")
