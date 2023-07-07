@@ -126,7 +126,7 @@ public class BancaController {
     }
 
     @PostMapping("/artigo/{idArtigo}/banca/cadastro")
-    public String solicitarBanca(@PathVariable Integer idArtigo) {
+    public Integer solicitarBanca(@PathVariable Integer idArtigo) {
         Artigo artigo = artigoService.findArtigoByid(idArtigo);
 
         // Pronto para banca
@@ -158,9 +158,9 @@ public class BancaController {
             requisicaoService.realizaRequisicao(email, assunto, mensagem);
             requisicaoService.realizaRequisicao(email2, assunto, mensagem);
 
-            return "Banca cadastradas com sucesso.";
+            return banca.getIdBanca();
         } else {
-            return "Erro ao cadastrar as bancas. O Orientador ainda não corrigiu o artigo.";
+            return -1;
         }
     }
 
