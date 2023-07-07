@@ -49,6 +49,7 @@ CREATE TABLE Banca (
 	dataAvaliacao TIMESTAMP,
 	artigoAvaliado INT NOT NULL,
 	status int NOT NULL DEFAULT 0,
+	correcao boolean NOT NULL DEFAULT false,
 	FOREIGN KEY (artigoAvaliado)
 		REFERENCES Artigo (idArtigo),
 	FOREIGN KEY (status)
