@@ -148,10 +148,8 @@ public class BancaService {
 
                 Professor professor = new Professor();
                 professor.setMatricula(resultSet.getString("professorAvaliador"));
-                Artigo artigo = new Artigo();
-                artigo.setIdArtigo(resultSet.getInt("artigoAvaliado"));
-                StatusBanca status = new StatusBanca();
-                status.setId(resultSet.getInt("status"));
+                Artigo artigo = artigoService.findArtigoByid(resultSet.getInt("artigoAvaliado"));
+                StatusBanca status = statusBancaService.findStatusBancaById(resultSet.getInt("status"));
 
                 Timestamp dataAvaliacao = resultSet.getTimestamp("dataAvaliacao");
                 if (dataAvaliacao != null) {

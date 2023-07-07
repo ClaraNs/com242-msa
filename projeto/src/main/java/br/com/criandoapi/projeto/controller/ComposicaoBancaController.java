@@ -67,9 +67,9 @@ public class ComposicaoBancaController {
     // Adicionar professor na banca
     @PostMapping("/composicao/{idBanca}/cadastrar")
     public String adicionaProfessorBanca(@PathVariable Integer idBanca,
-            @RequestParam("nome") String nome) {
+            @RequestParam("matricula") String matricula) {
         Professor professor = new Professor();
-        professor = professorService.findProfessorByNome(nome);
+        professor = professorService.findProfessorByMatricula(matricula);
 
         ComposicaoBanca composicao = new ComposicaoBanca();
         composicao.setBanca(bancaService.getBancaById(idBanca));
@@ -87,7 +87,7 @@ public class ComposicaoBancaController {
 
         requisicaoService.realizaRequisicao(email, assunto, mensagem);
 
-        return " " + nome + " cadastrado com sucesso na banca " + idBanca;
+        return " " + professor.getNome() + " cadastrado com sucesso na banca " + idBanca;
     }
 
     @PostMapping("professor/{matricula}/banca/{idBanca}/cadastrar/avaliacao")
