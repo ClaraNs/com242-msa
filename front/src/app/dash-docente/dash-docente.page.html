@@ -1,0 +1,342 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>Área do Docente</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-row class="saudacao">
+    <ion-text>
+      <h2><b>Olá, {{prof.nome}}!</b></h2>
+    </ion-text>
+  </ion-row>
+
+  <ion-row>
+    <ion-col>
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Artigos Orientados</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item *ngFor="let art of artigos">
+              <ion-label>{{art.titulo}}</ion-label>
+              <ion-button color="tertiary" class="bt-art" (click)="abrirInfo(art);">
+                <ion-icon slot="start" name="information-circle"></ion-icon>
+                Info
+              </ion-button>
+              <ion-button color="primary" class="bt-art" (click)="baixarArquivo(art.url)">
+                <ion-icon slot="start" name="download-outline"></ion-icon>
+                Baixar
+              </ion-button>
+              <ion-button color="warning" class="bt-art" *ngIf="art.status.id == 0 || art.status.id == 2 || art.status.id == 5"
+                id="open-modal" (click)="avaliar(art);">
+                <ion-icon slot="start" name="create"></ion-icon>
+                Avaliar
+              </ion-button>
+              <ion-button color="success" class="bt-art" *ngIf="art.status.id == 3"
+                id="open-modal" (click)="solicitarBanca(art);">
+                <ion-icon slot="start" name="people-outline"></ion-icon>
+                Solicitar Banca
+              </ion-button>
+            </ion-item>
+            <ion-item *ngIf="artigos.length == 0 && loading == false">
+              Não há artigos que você está orientando no momento...
+            </ion-item>
+            <ion-row class="center" *ngIf="loading == true">
+              <ion-spinner name="crescent"></ion-spinner>
+            </ion-row>
+
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    </ion-col>
+    <ion-col>
+      <ion-card>
+        <ion-card-header>
+          <ion-card-title>Bancas</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-list>
+            <ion-item *ngFor="let banca of bancas">
+              <ion-label>{{banca.artigoAvaliado.enviadoPor.nome}} - {{banca.artigoAvaliado.titulo}} </ion-label>
+              <ion-button color="tertiary" class="bt-art" (click)="infoBanca(banca)">
+                <ion-icon slot="start" name="information-circle"></ion-icon>
+                Info
+              </ion-button>
+              <ion-button color="primary" class="bt-art" (click)="definirData(banca)" *ngIf="banca.status.id == 1">
+                <ion-icon slot="start" name="calendar-outline"></ion-icon>
+                Definir Data
+              </ion-button>
+              <ion-button color="warning" class="bt-art" (click)="abrirNota(banca);" *ngIf="(banca.status.id == 2 || banca.status.id == 4)
+              && matricula != banca.artigoAvaliado.orientador.matricula">
+                <ion-icon slot="start" name="create"></ion-icon>
+                Avaliar
+              </ion-button>
+            </ion-item>
+            <ion-item *ngIf="bancas.length == 0 && loadingBanca == false">
+              Não há bancas que você está participando no momento...
+            </ion-item>
+            <ion-row class="center" *ngIf="loadingBanca == true">
+              <ion-spinner name="crescent"></ion-spinner>
+            </ion-row>
+
+          </ion-list>
+        </ion-card-content>
+      </ion-card>
+    </ion-col>
+  </ion-row>
+
+
+  <ion-modal [isOpen]="isModalOpenNota" (willDismiss)="onWillDismissNota($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="fechar()">Fechar</ion-button>
+          </ion-buttons>
+          <ion-title>Avaliar</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-item lines="none">
+          <ion-text>
+            <b> Título:</b> {{bancaAtual.artigoAvaliado.titulo}}
+          </ion-text>
+
+        </ion-item>
+        <ion-item lines="full">
+          <ion-text>
+            <b>Resumo: </b>{{bancaAtual.artigoAvaliado.resumo}}
+          </ion-text>
+        </ion-item>
+        <form (ngSubmit)="insereNota()">
+          <ion-item lines="none">
+            <ion-label position="stacked">Nota:</ion-label>
+            <ion-input placeholder="Insira a nota do trabalho..." [(ngModel)]="nota"
+              name="nota" ></ion-input>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label position="stacked">Considerações:</ion-label>
+            <ion-textarea placeholder="Insira suas considerações sobre o trabalho..." [(ngModel)]="consideracoesNota"
+              name="consideracoesNota" rows="4" autoGrow="true"></ion-textarea>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-toggle justify="start" [(ngModel)]="correcaoNota" name="correcaoNota">Necessita correção?</ion-toggle>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="bt-form">Enviar</ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isModalOpenData" (willDismiss)="onWillDismissData($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="fechar()">Fechar</ion-button>
+          </ion-buttons>
+          <ion-title>Definir Data</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+      
+        <form (ngSubmit)="selecionarData()">
+          <ion-item lines="none">
+            <ion-label position="stacked">Data:</ion-label>
+            <ion-input [(ngModel)]="data" name="data" type="date" placeholder="Selecione a data:"></ion-input>
+          </ion-item>
+      
+          <ion-item lines="none">
+            <ion-label position="stacked">Hora:</ion-label>
+            <ion-input [(ngModel)]="hora" name="hora" placeholder="Selecione a hora:"></ion-input>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="bt-form">Enviar</ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+
+
+  <ion-modal [isOpen]="isModalOpen" (willDismiss)="onWillDismiss($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="fechar()">Fechar</ion-button>
+          </ion-buttons>
+          <ion-title>Avaliar</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-item lines="none">
+          <ion-text>
+            <b> Título:</b> {{artigoAtual.titulo}}
+          </ion-text>
+
+        </ion-item>
+        <ion-item lines="full">
+          <ion-text>
+            <b>Resumo: </b>{{artigoAtual.resumo}}
+          </ion-text>
+        </ion-item>
+        <ion-item lines="full">
+          <ion-text>
+            <b>Considerações anteriores: </b>{{artigoAtual.consideracoes}}
+          </ion-text>
+        </ion-item>
+        <form (ngSubmit)="enviarAvaliacao()">
+          <ion-item lines="none">
+            <ion-label position="stacked">Considerações</ion-label>
+            <ion-textarea placeholder="Insira suas considerações sobre o trabalho..." [(ngModel)]="consideracoes"
+              name="consideracoes" rows="4" autoGrow="true"></ion-textarea>
+          </ion-item>
+          <ion-item lines="none" *ngIf="artigoAtual.status.id != 5">
+            <ion-toggle justify="start" [(ngModel)]="correcao" name="correcao">Necessita correção?</ion-toggle>
+          </ion-item>
+          <ion-button expand="block" type="submit" class="bt-form">Enviar</ion-button>
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isModalOpenInfo" (willDismiss)="onWillDismissInfo($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="fechar()">Fechar</ion-button>
+          </ion-buttons>
+          <ion-title>Informações do Artigo</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+
+        <ion-item lines="full">
+          <ion-text>
+            <b> Título:</b> {{artigoAtual.titulo}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Resumo: </b>{{artigoAtual.resumo}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Orientando: </b>{{artigoAtual.enviadoPor.nome}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Status: </b>{{artigoAtual.status.descricao}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="none">
+          <ion-text>
+            <b>Data de Envio: </b>{{artigoAtual.dataEnvio | date: 'dd/MM/yyyy HH:mm'}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Data de Alteração: </b>{{artigoAtual.alteracao | date: 'dd/MM/yyyy HH:mm'}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Nota Final: </b>{{artigoAtual.notaFinal | number: '1.1-1'}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full" *ngIf="artigoAtual.consideracoes != null">
+          <ion-text>
+            <b>Considerações anteriores: </b>{{artigoAtual.consideracoes}}
+          </ion-text>
+        </ion-item>
+
+        <ion-row class="center">
+          <ion-button color="primary" class="bt-art bt-form" (click)="baixarArquivo(artigoAtual.url)" expand="full">
+            <ion-icon slot="start" name="download-outline"></ion-icon>
+            Baixar artigo
+          </ion-button>
+        </ion-row>
+
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <ion-modal [isOpen]="isModalOpenInfoBanca" (willDismiss)="onWillDismissInfoBanca($event)">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="end">
+            <ion-button (click)="fechar()">Fechar</ion-button>
+          </ion-buttons>
+          <ion-title>Informações da Banca</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+
+        <ion-item lines="full">
+          <ion-text>
+            <b> Título:</b> {{bancaAtual.artigoAvaliado.titulo}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Resumo: </b>{{bancaAtual.artigoAvaliado.resumo}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Orientando: </b>{{bancaAtual.artigoAvaliado.enviadoPor.nome}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Status da Banca: </b>{{bancaAtual.status.descricao}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="none">
+          <ion-text>
+            <b>Data de Registro: </b>{{bancaAtual.dataRegistro | date: 'dd/MM/yyyy HH:mm'}}
+          </ion-text>
+        </ion-item>
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Data de Atualização: </b>{{bancaAtual.dataAtualizacao | date: 'dd/MM/yyyy HH:mm'}}
+          </ion-text>
+        </ion-item>
+
+
+        <ion-item lines="full">
+          <ion-text>
+            <b>Data de Avaliação: </b>{{bancaAtual.dataAvaliacao == null ? 'Não definida.' : bancaAtual.dataAvaliacao | date: 'dd/MM/yyyy HH:mm'}}
+          </ion-text>
+        </ion-item>
+
+        <ion-row class="center">
+          <ion-button color="primary" class="bt-art bt-form" (click)="baixarArquivo(bancaAtual.artigoAvaliado.url)" expand="full">
+            <ion-icon slot="start" name="download-outline"></ion-icon>
+            Baixar artigo
+          </ion-button>
+        </ion-row>
+
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

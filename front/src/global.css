@@ -1,0 +1,7 @@
+ion-button.bt-art::part(native) {
+  padding: 15px !important;
+}
+
+.saudacao {
+  justify-content: center;
+}

@@ -1,0 +1,7 @@
+{
+  "name": "tfgimc",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

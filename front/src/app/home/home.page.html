@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content >
+  <section class="pagina">
+  <ion-segment value="aluno" [(ngModel)]="tipomatricula" name="tipomatricula">
+    <ion-segment-button value="aluno">
+      <ion-label>Aluno</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="professor">
+      <ion-label>Professor</ion-label>
+    </ion-segment-button>
+    
+  </ion-segment>
+  <form (ngSubmit)="doLogin()">
+    <ion-item lines="full">
+      <ion-label position="floating">Matrícula:</ion-label>
+      <ion-input type="text" [(ngModel)]="matricula" name="matricula"></ion-input>
+    </ion-item>
+
+    <!--<ion-item>
+      <ion-label position="floating">Senha:</ion-label>
+      <ion-input type="password" [(ngModel)]="senha" name="senha"></ion-input>
+    </ion-item>-->
+
+    <ion-button expand="block" type="submit" class="bt-form">Entrar</ion-button>
+  </form>
+</section>
+</ion-content>
